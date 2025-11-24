@@ -42,3 +42,6 @@
 - Menambahkan `test/notifications.e2e-spec.ts` untuk menguji `GET /notifications` dengan seeding notifikasi dan JWT.
 - Memperluas `test/jobs.e2e-spec.ts` agar mencakup `/jobs/:id/apply`, `/jobs/application/:id/submit`, dan `/jobs/application/:id/confirm` (termasuk assert escrow release mock).
 - Siap melanjutkan modul-modul lain menggunakan pola testing serupa.
+
+## 8. Frontend Integration Guide
+- Menyusun `prompt/guide.md` berbahasa Indonesia lalu menerjemahkan ke Inggris agar tim FE global bisa mengikuti alur auth/social/trust/jobs/ZK/notification beserta payload dan tips testing.
