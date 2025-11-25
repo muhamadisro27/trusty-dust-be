@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
@@ -21,7 +22,7 @@ import { PrivyAuthGuard } from '../common/guards/privy-auth.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, PrivyAuthGuard],
+  providers: [AuthService, JwtStrategy, PrivyAuthGuard, ThrottlerGuard],
   exports: [AuthService, JwtStrategy, PrivyAuthGuard, JwtModule],
 })
 export class AuthModule {}

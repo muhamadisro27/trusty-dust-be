@@ -1,5 +1,6 @@
 import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { SocialService } from './social.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -11,11 +12,12 @@ import { BoostPostDto } from './dto/boost-post.dto';
 @ApiTags('Social')
 @ApiBearerAuth('backend-jwt')
 @Controller('social')
-@UseGuards(JwtAuthGuard)
+@UseGuards(ThrottlerGuard, JwtAuthGuard)
 export class SocialController {
   constructor(private readonly socialService: SocialService) {}
 
   @Post('posts')
+  @Throttle({ socialPost: { limit: 20, ttl: 60 } })
   @ApiOperation({ summary: 'Create post and earn DUST reward' })
   @ApiCreatedResponse({ description: 'Returns created post with media records' })
   create(@CurrentUser() user: RequestUser, @Body() dto: CreatePostDto) {
@@ -23,6 +25,7 @@ export class SocialController {
   }
 
   @Post('posts/:id/react')
+  @Throttle({ socialReact: { limit: 60, ttl: 60 } })
   @ApiOperation({ summary: 'React (like/comment/repost) to a post' })
   @ApiOkResponse({ description: 'Reaction created' })
   react(
@@ -34,6 +37,7 @@ export class SocialController {
   }
 
   @Post('posts/:id/boost')
+  @Throttle({ socialBoost: { limit: 10, ttl: 60 } })
   @ApiOperation({ summary: 'Spend DUST to boost a post' })
   @ApiOkResponse({ description: 'Boost ledger entry' })
   boost(

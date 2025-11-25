@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { SocialService } from './social.service';
 import { SocialController } from './social.controller';
 import { PrismaModule } from '../prisma/prisma.module';
@@ -9,7 +10,7 @@ import { BlockchainModule } from '../blockchain/blockchain.module';
 
 @Module({
   imports: [PrismaModule, DustModule, TrustModule, NotificationModule, BlockchainModule],
-  providers: [SocialService],
+  providers: [SocialService, ThrottlerGuard],
   controllers: [SocialController],
 })
 export class SocialModule {}

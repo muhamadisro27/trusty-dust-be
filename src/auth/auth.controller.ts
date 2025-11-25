@@ -1,5 +1,6 @@
 import { BadRequestException, Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { PrivyAuthGuard } from '../common/guards/privy-auth.guard';
@@ -10,7 +11,8 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @UseGuards(PrivyAuthGuard)
+  @UseGuards(ThrottlerGuard, PrivyAuthGuard)
+  @Throttle({ auth: { limit: 5, ttl: 60 } })
   @ApiBearerAuth('privy')
   @ApiOperation({ summary: 'Verify Privy token and mint backend JWT' })
   @ApiBody({ type: LoginDto, required: false })

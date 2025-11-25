@@ -5,10 +5,11 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { BlockchainModule } from '../blockchain/blockchain.module';
 import { ZkProver } from './zk.prover';
 import { ZkCompiler } from './zk.compiler';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 @Module({
   imports: [PrismaModule, BlockchainModule],
-  providers: [ZkService, ZkProver, ZkCompiler],
+  providers: [ZkService, ZkProver, ZkCompiler, ThrottlerGuard],
   controllers: [ZkController],
   exports: [ZkService],
 })

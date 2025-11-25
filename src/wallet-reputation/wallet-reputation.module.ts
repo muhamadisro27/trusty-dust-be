@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import { WalletReputationController } from './wallet-reputation.controller';
 import { WalletReputationService } from './wallet-reputation.service';
 import { OnchainCollectorModule } from '../onchain-collector/onchain-collector.module';
@@ -11,6 +12,7 @@ import { ZkModule } from '../zk/zk.module';
   controllers: [WalletReputationController],
   providers: [
     WalletReputationService,
+    ThrottlerGuard,
     {
       provide: 'WalletScoreProofGateway',
       useExisting: ZkService,

@@ -79,7 +79,12 @@
 - Menghapus alias `@/` dan mengembalikan seluruh import ke jalur relatif standar untuk menghindari masalah runtime (Vercel lambda tidak lagi membutuhkan `tsconfig-paths`). Script npm, konfigurasi Jest, dan dokumentasi disesuaikan kembali.
 
 ## 17. Rate Limiter
-- Mengaktifkan `@nestjs/throttler` secara global melalui `ThrottlerModule` + `APP_GUARD` sehingga setiap endpoint dibatasi 100 request/menit per IP. README diperbarui agar tim tahu adanya guard ini.
+- Menambahkan `@nestjs/throttler` pada beberapa controller berisiko tinggi:
+  - `/auth/login` → 5 req/menit per IP.
+  - Social (`/social/posts`, `/react`, `/boost`) → batas 20/60/10 req per menit untuk mencegah spam konten/reward farming.
+  - `/wallet-reputation/analyze` → 10 req per 5 menit.
+  - `/zk/generate` → 5 req/menit, `/zk/verify` → 30 req/menit.
+- Setiap modul mendapatkan `ThrottlerGuard` di providernya sehingga Nest bisa menerapkan guard tanpa global APP_GUARD. README & changelog diperbarui agar tim tahu batasan baru ini.
 
 ## 17. Hybrid Wallet Reputation + ZK Revamp
 - Mengupgrade `AiScoringService` menjadi pipeline hybrid: heuristik deterministik + overlay Gemini (via `GeminiClientService` dan util normalizer). Env `GEMINI_API_KEY` ditambahkan untuk mengaktifkan overlay.

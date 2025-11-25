@@ -1,5 +1,6 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { ZkService } from './zk.service';
 import { GenerateScoreProofDto } from './dto/generate-score-proof.dto';
 import { VerifyCalldataDto } from './dto/verify-calldata.dto';
@@ -12,7 +13,8 @@ export class ZkController {
   constructor(private readonly zkService: ZkService) {}
 
   @Post('generate')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard, JwtAuthGuard)
+  @Throttle({ zkGenerate: { limit: 5, ttl: 60 } })
   @ApiOperation({ summary: 'Generate Noir score proof from backend inputs' })
   @ApiCreatedResponse({ description: 'Proof and public inputs ready for on-chain verification' })
   generate(@Body() dto: GenerateScoreProofDto) {
@@ -20,7 +22,8 @@ export class ZkController {
   }
 
   @Post('verify')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(ThrottlerGuard, JwtAuthGuard)
+  @Throttle({ zkVerify: { limit: 30, ttl: 60 } })
   @ApiOperation({ summary: 'Verify Noir proof against TrustVerification contract' })
   @ApiOkResponse({ description: 'Boolean verification result' })
   verify(@Body() dto: VerifyCalldataDto) {

@@ -13,10 +13,10 @@ Backend MVP untuk ekosistem TrustyDust yang menggabungkan reputasi sosial, job e
 - **Jobs + Escrow Module**: Flow full (create/apply/submit/confirm), mengunci USDC on-chain lewat viem escrow client.
 - **Notification Module**: REST list + Websocket gateway untuk push updates.
 - **Chat Module**: DM antar user untuk koordinasi job/social, persistence via Prisma + broadcast realtime menggunakan Supabase Realtime channel.
-- **Hybrid Wallet Reputation**: Kolektor pseudo on-chain + heuristic scoring + overlay Gemini (opsional) untuk memperoleh skor + reasoning sebelum disimpan.
+- **Hybrid Wallet Reputation**: Kolektor pseudo on-chain + heuristic scoring + overlay Gemini (opsional) untuk memperoleh skor + reasoning sebelum disimpan (dengan limit 10 analisa/5 menit per IP).
 - **Onchain Collector + AI Scoring**: Pseudo on-chain data collector + heuristic scoring engine sebagai dasar analisis reputasi dompet.
 - **Wallet Reputation Module**: Analitik reputasi wallet (tx/token/NFT/DeFi/contract) + integrasi proof trigger.
-- **Rate Limiting**: Global guard (`@nestjs/throttler`) membatasi 100 request/menit per IP agar API lebih tahan abuse.
+- **Rate Limiting**: Endpoint login (`/auth/login`) dibatasi `@nestjs/throttler` (5 request/menit per IP) untuk mencegah brute force.
 - **Blockchain Module**: viem public/wallet client + ABI loader untuk Dust Token, TrustVerification, EscrowFactory, dan SBT NFT.
 
 ## Persiapan Lingkungan
@@ -55,11 +55,11 @@ Seluruh entitas yang diminta tersedia di `prisma/schema.prisma`: `User`, `Post`,
 | --- | --- | --- |
 | `/api/v1/auth/login` | POST | FE kirim `Authorization: Bearer <privy_jwt>`, backend verifikasi Privy lalu balas backend JWT.
 | `/api/v1/users/me` | GET/PATCH | Lihat & update profil (JWT required).
-| `/api/v1/social/posts` | POST | Buat post, otomatis +3 DUST.
-| `/api/v1/social/posts/:id/react` | POST | Like/Comment/Repost (+1/+3/+1 DUST, daily cap 50 DUST).
-| `/api/v1/social/posts/:id/boost` | POST | Burn DUST untuk promote post.
+| `/api/v1/social/posts` | POST | Buat post, otomatis +3 DUST (rate limit 20/min/IP).
+| `/api/v1/social/posts/:id/react` | POST | Like/Comment/Repost (+1/+3/+1 DUST, daily cap 50 DUST) — rate limit 60/min/IP.
+| `/api/v1/social/posts/:id/boost` | POST | Burn DUST untuk promote post (rate limit 10/min/IP).
 | `/api/v1/trust/score` | GET | Ambil skor terkini.
-| `/api/v1/zk/generate` | POST | Backend generate proof Noir dari skor yang diberikan.
+| `/api/v1/zk/generate` | POST | Backend generate proof Noir dari skor yang diberikan (5 request/min/IP).
 | `/api/v1/zk/verify` | POST | Simpan proof Noir setelah diverifikasi on-chain.
 | `/api/v1/jobs/create` | POST | Buat job (butuh proof ≥ minTrustScore, burn 50 DUST, lock escrow).
 | `/api/v1/jobs/:id/apply` | POST | Worker apply (proof ≥ minTrustScore, burn 20 DUST).
@@ -116,7 +116,7 @@ Frontend harus mengirimkan struktur berikut saat memanggil `POST /jobs/create`:
 `companyLogo`, `requirements`, `salaryMin`, `salaryMax`, `closeAt`, dan `zkProofId` bersifat opsional. Backend otomatis akan menolak request jika `salaryMin > salaryMax` atau jika requirements dikirim kosong (akan dibersihkan menjadi array kosong).
 
 ## Wallet Reputation Analyzer
-- `POST /wallet-reputation/analyze` menerima `{ address, chainId, userId? }` lalu:
+- `POST /wallet-reputation/analyze` (10 request/5 menit per IP) menerima `{ address, chainId, userId? }` lalu:
   1. Mengumpulkan profil pseudo on-chain (tx count, NFT, DeFi, dll) memakai `OnchainCollectorService`.
   2. Menjalankan hybrid scoring (`AiScoringService`): heuristik → overlay Gemini (jika `GEMINI_API_KEY` tersedia) → hasil akhir 0–1000 + reasoning.
   3. Menyimpan hasil ke Prisma `WalletReputation` (beserta `rawData` JSON) dan memicu `ZkService.generateScoreProof` bila skor >= 300 sehingga bukti siap diverifikasi.
@@ -148,7 +148,7 @@ nargo compile
 Hasil kompilasi (`build/wallet_score.acir.gz`, proving/verification key) akan otomatis di-load oleh `ZkCompiler` ketika aplikasi start.
 
 ### ZK Workflow Backend
-1. **Proving** – `POST /zk/generate` body `{ "score": 720, "minScore": 600, "userId": "optional" }`. Service menyiapkan witness, menjalankan Noir WASM + Barretenberg untuk membuat proof + `publicInputs`, lalu menyimpannya ke tabel `ZkProof`.
+1. **Proving** – `POST /zk/generate` body `{ "score": 720, "minScore": 600, "userId": "optional" }` (dibatasi 5 req/min/IP). Service menyiapkan witness, menjalankan Noir WASM + Barretenberg untuk membuat proof + `publicInputs`, lalu menyimpannya ke tabel `ZkProof`.
 2. **Verifikasi on-chain** – `POST /zk/verify` body `{ proof, publicInputs }`. Backend memanggil kontrak `TrustVerification.sol` via viem. ABI ada di `src/abis/trust-verification.json` dan contoh kontrak berada di `contracts/TrustVerification.sol` (siap dikompilasi dengan Foundry `forge build`).
 3. **Testing script** – `npm run test:zk` menjalankan `scripts/test-zk.ts` yang:
    - mengecek hasil kompilasi circuit,
