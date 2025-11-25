@@ -1,10 +1,11 @@
-import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { DomainErrorFactory } from '../common/errors/domain-error.helper';
 
 const DEFAULT_MESSAGE_LIMIT = 50;
 const MAX_MESSAGE_LIMIT = 200;
@@ -52,7 +53,10 @@ export class ChatService {
       select: { id: true },
     });
     if (users.length !== participantIds.length) {
-      throw new NotFoundException('One or more participant IDs are invalid');
+      throw DomainErrorFactory.create({
+        type: 'not_found',
+        message: 'One or more participant IDs are invalid',
+      });
     }
 
     const conversation = await this.prisma.chatConversation.create({
@@ -126,7 +130,10 @@ export class ChatService {
       where: { conversationId, userId },
     });
     if (!membership) {
-      throw new ForbiddenException('You are not a participant of this conversation');
+      throw DomainErrorFactory.create({
+        type: 'forbidden',
+        message: 'You are not a participant of this conversation',
+      });
     }
   }
 
