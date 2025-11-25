@@ -67,9 +67,9 @@ Seluruh entitas yang diminta tersedia di `prisma/schema.prisma`: `User`, `Post`,
 | `/api/v1/jobs/application/:id/confirm` | POST | Poster konfirmasi, escrow release USDC, TrustEvent +100 – 30 req/5 menit/IP.
 | `/api/v1/tier/me` | GET | Lihat tier + history.
 | `/api/v1/notifications` | GET | Ambil notifikasi terbaru (limit 60 req/menit/IP); socket gateway tersedia di `ws://host:PORT` (query `userId` untuk join room pribadi).
-| `/api/v1/chat/conversations` | GET/POST | List percakapan & buat DM/room baru (otomatis menambahkan creator + participant).
-| `/api/v1/chat/conversations/:id/messages` | GET | Ambil pesan (limit default 50) untuk conversation tertentu.
-| `/api/v1/chat/messages` | POST | Kirim pesan lalu broadcast ke channel Supabase `chat:<conversationId>`.
+| `/api/v1/chat/conversations` | GET/POST | List percakapan (60 req/min) & buat DM/room baru (20 req/min) otomatis menambahkan creator + participant.
+| `/api/v1/chat/conversations/:id/messages` | GET | Ambil pesan (limit default 50) untuk conversation tertentu (120 req/min).
+| `/api/v1/chat/messages` | POST | Kirim pesan lalu broadcast ke channel Supabase `chat:<conversationId>` (60 req/min).
 | `/api/v1/wallet-reputation/analyze` | POST | Analisa alamat menggunakan collector + heuristic AI, menyimpan skor & raw data ke DB.
 | `/api/v1/wallet-reputation/:address` | GET | Ambil snapshot reputasi terbaru (butuh query `chainId`).
 

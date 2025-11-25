@@ -86,6 +86,7 @@
   - `/zk/generate` → 5 req/menit, `/zk/verify` → 30 req/menit.
   - Jobs (`/jobs/create`, `/jobs/:id/apply`, `/jobs/application/:id/(submit|confirm)`) → batas 10/30 req per 5 menit untuk mencegah spam posting/aplikasi.
   - `/notifications` GET → 60 req/menit agar polling tidak berlebihan.
+  - Chat (`/chat/conversations`, `/messages`) → batas 60 req/menit untuk list/send message dan 20 req/menit untuk pembuatan conversation.
 - Setiap modul mendapatkan `ThrottlerGuard` di providernya sehingga Nest bisa menerapkan guard tanpa global APP_GUARD. README & changelog diperbarui agar tim tahu batasan baru ini.
 
 ## 17. Hybrid Wallet Reputation + ZK Revamp

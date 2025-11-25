@@ -7,7 +7,7 @@
 - Job creation payload now includes company details (logo/name/location), job type, requirements array, salary range, and closing date. Schema, DTO, services, and guides updated accordingly.
 - Wallet reputation analyzer stack: `OnchainCollectorService`, `AiScoringService`, and `WalletReputationModule` with REST endpoints to analyze + fetch wallet scores. Added Prisma `WalletReputation` model and example e2e test.
 - Rolled back the `@/` path alias to avoid runtime issues; scripts, Jest configs, and imports now use standard relative paths again.
-- Added rate limiting via `@nestjs/throttler` for `/auth/login` (5 req/min), social interactions (20–60 req/min tiers), wallet reputation analysis (10 req/5 min), `/zk/generate` (5 req/min), jobs create/apply/submit/confirm (10–30 req/5 min), and notification polling (60 req/min) to prevent abuse.
+- Added rate limiting via `@nestjs/throttler` for `/auth/login` (5 req/min), social interactions (20–60 req/min tiers), wallet reputation analysis (10 req/5 min), `/zk/generate` (5 req/min), jobs create/apply/submit/confirm (10–30 req/5 min), notification polling (60 req/min), and chat endpoints (conversation list/create/messages at 60/20/60 req/min) to prevent abuse.
 - Hybrid AI scoring (heuristics + Gemini overlay), refreshed wallet reputation responses (reasoning + zkProofId), new `/zk/generate` endpoint, and Noir circuit moved to `circuits/wallet_score` with updated proving service.
 
 ### Fixed

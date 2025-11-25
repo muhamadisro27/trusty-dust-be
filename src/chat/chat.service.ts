@@ -17,7 +17,7 @@ export class ChatService {
   constructor(private readonly prisma: PrismaService, private readonly config: ConfigService) {
     const supabaseUrl = this.config.get<string>('SUPABASE_URL');
     const supabaseKey = this.config.get<string>('SUPABASE_SERVICE_ROLE_KEY');
-    
+   
     if (supabaseUrl && supabaseKey) {
       this.supabase = createClient(supabaseUrl, supabaseKey, {
         auth: { persistSession: false },
