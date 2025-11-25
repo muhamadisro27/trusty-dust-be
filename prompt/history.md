@@ -48,3 +48,6 @@
 
 ## 9. API Prefix Update
 - Menetapkan global prefix `/api/v1` di `main.ts` dan memperbarui seluruh e2e test, README, serta guide agar FE menggunakan path baru tersebut.
+
+## 10. Swagger Deployment Fix
+- Mengubah konfigurasi Swagger di `src/main.ts` agar memuat aset CSS/JS dan favicon dari CDN `swagger-ui-dist`, memastikan halaman `/docs` tidak lagi 404 ketika dideploy di Vercel / lingkungan serverless.

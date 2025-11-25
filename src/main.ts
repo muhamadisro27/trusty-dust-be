@@ -17,15 +17,32 @@ async function bootstrap() {
   );
   const config = new DocumentBuilder()
     .setTitle('TrustyDust Backend API')
-    .setDescription('Full API surface for auth, social, trust, tier, ZK, jobs, and blockchain flows')
+    .setDescription(
+      'Full API surface for auth, social, trust, tier, ZK, jobs, and blockchain flows',
+    )
     .setVersion('1.0.0')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'privy')
-    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, 'backend-jwt')
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'privy',
+    )
+    .addBearerAuth(
+      { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+      'backend-jwt',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('/api/docs', app, document, {
+    customSiteTitle: 'TrustyDust API Docs',
+    swaggerOptions: { persistAuthorization: true },
+    customfavIcon: 'https://unpkg.com/swagger-ui-dist@5.10.5/favicon-32x32.png',
+    customJs: [
+      'https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js',
+      'https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js',
+    ],
+    customCssUrl: 'https://unpkg.com/swagger-ui-dist/swagger-ui.css',
+  });
 
-  console.log(`running on port http://localhost:${process.env.PORT}`)
+  console.log(`running on port http://localhost:${process.env.PORT}`);
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
