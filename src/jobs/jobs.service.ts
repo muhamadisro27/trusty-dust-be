@@ -151,7 +151,7 @@ export class JobsService {
       where,
       orderBy: { createdAt: 'desc' },
       take: take + 1,
-      ...cursorOptions,
+      ...(cursorOptions ?? {}),
       include: {
         creator: { select: { id: true, username: true, avatar: true } },
         _count: {

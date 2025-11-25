@@ -29,6 +29,8 @@ model User {
   walletAddress  String             @unique
   username       String?
   avatar         String?
+  jobTitle       String?
+  jobType        String?
   tier           String             @default("Dust")
   trustScore     Int                @default(0)
   createdAt      DateTime           @default(now())

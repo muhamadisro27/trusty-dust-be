@@ -64,34 +64,34 @@ export class UsersService {
 
   async searchPeople(requesterId: string, query: SearchPeopleQueryDto) {
     const take = Math.min(parseInt(query.limit ?? '20', 10) || 20, 50);
-    const cursorOptions = query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {};
+    const cursorOptions = query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : undefined;
 
     const where: Prisma.UserWhereInput = {
       id: { not: requesterId },
     };
 
-    const keywordFilters = [];
+    const keywordFilters: Prisma.UserWhereInput[] = [];
     if (query.keyword) {
       keywordFilters.push(
-        { username: { contains: query.keyword, mode: 'insensitive' } },
-        { jobTitle: { contains: query.keyword, mode: 'insensitive' } },
+        { username: { contains: query.keyword, mode: Prisma.QueryMode.insensitive } },
+        { jobTitle: { contains: query.keyword, mode: Prisma.QueryMode.insensitive } },
       );
     }
     if (keywordFilters.length) {
       where.OR = keywordFilters;
     }
     if (query.jobTitle) {
-      where.jobTitle = { contains: query.jobTitle, mode: 'insensitive' };
+      where.jobTitle = { contains: query.jobTitle, mode: Prisma.QueryMode.insensitive };
     }
     if (query.jobType) {
-      where.jobType = { equals: query.jobType, mode: 'insensitive' };
+      where.jobType = { equals: query.jobType, mode: Prisma.QueryMode.insensitive };
     }
 
     const results = await this.prisma.user.findMany({
       where,
       orderBy: { createdAt: 'desc' },
       take: take + 1,
-      ...cursorOptions,
+      ...(cursorOptions ?? {}),
       select: {
         id: true,
         username: true,
@@ -174,7 +174,7 @@ export class UsersService {
         OR: [
           { tier: requester.tier },
           ...(requester.jobType
-            ? [{ jobType: { equals: requester.jobType, mode: 'insensitive' } }]
+            ? [{ jobType: { equals: requester.jobType, mode: Prisma.QueryMode.insensitive } }]
             : []),
         ],
       },
