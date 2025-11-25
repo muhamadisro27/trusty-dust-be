@@ -16,6 +16,7 @@ Backend MVP untuk ekosistem TrustyDust yang menggabungkan reputasi sosial, job e
 - **Hybrid Wallet Reputation**: Kolektor pseudo on-chain + heuristic scoring + overlay Gemini (opsional) untuk memperoleh skor + reasoning sebelum disimpan.
 - **Onchain Collector + AI Scoring**: Pseudo on-chain data collector + heuristic scoring engine sebagai dasar analisis reputasi dompet.
 - **Wallet Reputation Module**: Analitik reputasi wallet (tx/token/NFT/DeFi/contract) + integrasi proof trigger.
+- **Rate Limiting**: Global guard (`@nestjs/throttler`) membatasi 100 request/menit per IP agar API lebih tahan abuse.
 - **Blockchain Module**: viem public/wallet client + ABI loader untuk Dust Token, TrustVerification, EscrowFactory, dan SBT NFT.
 
 ## Persiapan Lingkungan

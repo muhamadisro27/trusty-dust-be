@@ -78,6 +78,9 @@
 ## 16. Path Alias Cleanup
 - Menghapus alias `@/` dan mengembalikan seluruh import ke jalur relatif standar untuk menghindari masalah runtime (Vercel lambda tidak lagi membutuhkan `tsconfig-paths`). Script npm, konfigurasi Jest, dan dokumentasi disesuaikan kembali.
 
+## 17. Rate Limiter
+- Mengaktifkan `@nestjs/throttler` secara global melalui `ThrottlerModule` + `APP_GUARD` sehingga setiap endpoint dibatasi 100 request/menit per IP. README diperbarui agar tim tahu adanya guard ini.
+
 ## 17. Hybrid Wallet Reputation + ZK Revamp
 - Mengupgrade `AiScoringService` menjadi pipeline hybrid: heuristik deterministik + overlay Gemini (via `GeminiClientService` dan util normalizer). Env `GEMINI_API_KEY` ditambahkan untuk mengaktifkan overlay.
 - Menyusun ulang `ZkService`/controller agar menyediakan endpoint `/zk/generate` dengan input `{ score, minScore, userId? }`, memanfaatkan circuit baru `circuits/wallet_score` dan menyimpan hasil ke Prisma `ZkProof` (userId opsional).
