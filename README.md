@@ -85,6 +85,29 @@ Semua endpoint (kecuali `/auth/login` & `/health`) memakai `JwtAuthGuard`.
 3. **Submit**: Worker mengirim `workSubmissionText`, status menjadi SUBMITTED.
 4. **Confirm**: Poster konfirmasi → Escrow release (atau refund jika perlu), `TrustEvent(job_completed, +100)` dijalankan dan tier dicek ulang.
 
+### Job creation payload
+Frontend harus mengirimkan struktur berikut saat memanggil `POST /jobs/create`:
+
+```json
+{
+  "title": "Design TrustyDust badge",
+  "description": "Need tier badge set",
+  "companyName": "TrustyDust Labs",
+  "companyLogo": "https://cdn.trustydust/logo.png",
+  "location": "Remote",
+  "jobType": "Contract",
+  "requirements": ["3+ years UI/UX", "Available CET hours"],
+  "minTrustScore": 300,
+  "reward": 200,
+  "salaryMin": 120,
+  "salaryMax": 240,
+  "closeAt": "2030-01-01T00:00:00.000Z",
+  "zkProofId": "optional"
+}
+```
+
+`companyLogo`, `requirements`, `salaryMin`, `salaryMax`, `closeAt`, dan `zkProofId` bersifat opsional. Backend otomatis akan menolak request jika `salaryMin > salaryMax` atau jika requirements dikirim kosong (akan dibersihkan menjadi array kosong).
+
 ## Chat + Supabase Realtime
 - **Source of truth di Neon** – setiap percakapan & pesan tetap tersimpan di `ChatConversation`/`ChatMessage` melalui Prisma sehingga histori aman dan bisa di-query ulang (search, analytics).
 - **Broadcast realtime via Supabase** – backend memakai `@supabase/supabase-js` dengan *service role key* untuk melakukan broadcast ke channel `chat:<conversationId>` setiap kali percakapan dibuat atau pesan dikirim.

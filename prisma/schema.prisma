@@ -147,6 +147,14 @@ model Job {
   creator       User             @relation("JobCreator", fields: [creatorId], references: [id])
   title         String
   description   String
+  companyName   String
+  companyLogo   String?
+  location      String
+  jobType       String
+  requirements  String[]         @default([])
+  salaryMin     Int?
+  salaryMax     Int?
+  closeAt       DateTime?
   minTrustScore Int
   reward        Int
   status        JobStatus        @default(OPEN)

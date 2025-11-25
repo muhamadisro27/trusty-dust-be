@@ -31,22 +31,46 @@ describe('JobsService', () => {
     service = new JobsService(prisma, dust, trust, escrow, zk, notification);
   });
 
+  const createJobPayload = () =>
+    ({
+      title: 'job',
+      description: 'desc',
+      companyName: 'TrustyDust',
+      companyLogo: 'https://cdn/logo.png',
+      location: 'Remote',
+      jobType: 'Contract',
+      requirements: ['Figma'],
+      minTrustScore: 100,
+      reward: 20,
+      salaryMin: 80,
+      salaryMax: 150,
+      closeAt: '2030-01-01T00:00:00.000Z',
+    }) as any;
+
   describe('createJob', () => {
+    it('throws when salary min greater than max', async () => {
+      await expect(
+        service.createJob(
+          'user',
+          {
+            ...createJobPayload(),
+            salaryMin: 200,
+            salaryMax: 100,
+          },
+        ),
+      ).rejects.toBeInstanceOf(BadRequestException);
+    });
+
     it('throws when creator missing', async () => {
       (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
       await expect(
-        service.createJob('user', {
-          title: 'title',
-          description: 'desc',
-          minTrustScore: 100,
-          reward: 10,
-        } as any),
+        service.createJob('user', createJobPayload()),
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
     it('asserts proof, spends dust, creates job, locks escrow, notifies', async () => {
-      const dto = { title: 'job', description: 'desc', minTrustScore: 100, reward: 20 } as any;
+      const dto = createJobPayload();
       (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user', walletAddress: '0xabc' });
       (prisma.job.create as jest.Mock).mockResolvedValue({ id: 'job', chainRef: 5 });
 

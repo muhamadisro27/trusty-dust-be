@@ -23,6 +23,14 @@ export class JobsService {
   ) {}
 
   async createJob(userId: string, dto: CreateJobDto) {
+    if (
+      dto.salaryMin !== undefined &&
+      dto.salaryMax !== undefined &&
+      dto.salaryMin > dto.salaryMax
+    ) {
+      throw new BadRequestException('salaryMin cannot exceed salaryMax');
+    }
+
     await this.zkService.assertProof(userId, dto.minTrustScore, dto.zkProofId);
     await this.dustService.spendDust(userId, 50, 'job_create');
     this.logger.log(`User ${userId} creating job ${dto.title}`);
@@ -31,11 +39,22 @@ export class JobsService {
       throw new NotFoundException('User missing');
     }
 
+    const normalizedRequirements =
+      dto.requirements?.map((req) => req.trim()).filter((req) => req.length > 0) ?? [];
+
     const job = await this.prisma.job.create({
       data: {
         creatorId: userId,
         title: dto.title,
         description: dto.description,
+        companyName: dto.companyName,
+        companyLogo: dto.companyLogo,
+        location: dto.location,
+        jobType: dto.jobType,
+        requirements: normalizedRequirements,
+        salaryMin: dto.salaryMin,
+        salaryMax: dto.salaryMax,
+        closeAt: dto.closeAt ? new Date(dto.closeAt) : undefined,
         minTrustScore: dto.minTrustScore,
         reward: dto.reward,
         status: 'OPEN',

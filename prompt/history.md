@@ -61,3 +61,8 @@
 ## 12. Guide Update (Chat Integration)
 - Menambahkan section khusus pada `prompt/guide.md` yang menjelaskan alur REST chat, cara subscribe Supabase Realtime (channel naming, payload `message.new`/`conversation.created`), dan strategi reconnect FE sebelum resync pesan.
 - Menyorot env yang dibutuhkan (service role untuk backend, anon key untuk FE) serta batasan saat ini (belum ada typing indicator/read receipt) agar tim FE siap mengimplementasikan UI chat.
+
+## 13. Jobs Payload Refresh
+- Menyesuaikan Prisma schema & DTO agar job memiliki metadata lengkap (companyName/logo, location, jobType, requirements array, salaryMin/max, closeAt).
+- Memperbarui `JobsService` (validasi salary range + normalisasi requirement), unit test (`jobs.service.spec.ts`), dan e2e sample payload supaya sesuai UI baru.
+- Mengupdate seed data, README, dan integration guide dengan contoh payload lengkap sehingga FE tahu field apa yang wajib/opsional.

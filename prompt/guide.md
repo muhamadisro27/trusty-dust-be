@@ -39,7 +39,25 @@ This document explains how the frontend (FE) should call the backend, the execut
 2. **Verify** – `POST /zk/verify` with `{ "proof": "0x...", "publicInputs": ["1"] }`. Backend calls the on-chain `TrustVerification.sol` contract via viem and returns `{ "valid": true }`.
 
 ## 6. Jobs Workflow
-1. **Create** – `POST /jobs/create` with title/description/minTrustScore/reward. Poster must have ZK proof (validated server-side) and pays 50 DUST; Escrow lock executed on success.
+1. **Create** – `POST /jobs/create` now expects enriched company/job metadata:
+   ```json
+   {
+     "title": "Design TrustyDust badge",
+     "description": "Need tier art",
+     "companyName": "TrustyDust Labs",
+     "companyLogo": "https://cdn/logo.png",
+     "location": "Remote",
+     "jobType": "Contract",
+     "requirements": ["3+ years UI", "Understands staking"],
+     "minTrustScore": 300,
+     "reward": 250,
+     "salaryMin": 120,
+     "salaryMax": 200,
+     "closeAt": "2030-01-01T00:00:00.000Z",
+     "zkProofId": "optional"
+   }
+   ```
+   Poster must have ZK proof (validated server-side) and pays 50 DUST; Escrow lock executed on success. Backend will reject if `salaryMin > salaryMax`. Requirements array is optional—empty or blank values are stripped automatically.
 2. **Apply** – `POST /jobs/:id/apply` with optional `zkProofId`. Worker pays 20 DUST and must meet min trust score.
 3. **Submit** – `POST /jobs/application/:id/submit` with `{ "workSubmissionText": "..." }` to mark work submitted.
 4. **Confirm** – `POST /jobs/application/:id/confirm` with `{ "txHash": "0x..." }`. Poster confirms, backend releases escrow, rewards worker (`TrustEvent job_completed`).
