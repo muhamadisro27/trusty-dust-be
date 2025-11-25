@@ -13,6 +13,8 @@ Backend MVP untuk ekosistem TrustyDust yang menggabungkan reputasi sosial, job e
 - **Jobs + Escrow Module**: Flow full (create/apply/submit/confirm), mengunci USDC on-chain lewat viem escrow client.
 - **Notification Module**: REST list + Websocket gateway untuk push updates.
 - **Chat Module**: DM antar user untuk koordinasi job/social, persistence via Prisma + broadcast realtime menggunakan Supabase Realtime channel.
+- **Onchain Collector + AI Scoring**: Pseudo on-chain data collector + heuristic scoring engine sebagai dasar analisis reputasi dompet.
+- **Wallet Reputation Module**: Analitik reputasi wallet (tx/token/NFT/DeFi/contract) + integrasi proof trigger.
 - **Blockchain Module**: viem public/wallet client + ABI loader untuk Dust Token, TrustVerification, EscrowFactory, dan SBT NFT.
 
 ## Persiapan Lingkungan
@@ -65,6 +67,8 @@ Seluruh entitas yang diminta tersedia di `prisma/schema.prisma`: `User`, `Post`,
 | `/api/v1/chat/conversations` | GET/POST | List percakapan & buat DM/room baru (otomatis menambahkan creator + participant).
 | `/api/v1/chat/conversations/:id/messages` | GET | Ambil pesan (limit default 50) untuk conversation tertentu.
 | `/api/v1/chat/messages` | POST | Kirim pesan lalu broadcast ke channel Supabase `chat:<conversationId>`.
+| `/api/v1/wallet-reputation/analyze` | POST | Analisa alamat menggunakan collector + heuristic AI, menyimpan skor & raw data ke DB.
+| `/api/v1/wallet-reputation/:address` | GET | Ambil snapshot reputasi terbaru (butuh query `chainId`).
 
 Semua endpoint (kecuali `/auth/login` & `/health`) memakai `JwtAuthGuard`.
 
@@ -107,6 +111,14 @@ Frontend harus mengirimkan struktur berikut saat memanggil `POST /jobs/create`:
 ```
 
 `companyLogo`, `requirements`, `salaryMin`, `salaryMax`, `closeAt`, dan `zkProofId` bersifat opsional. Backend otomatis akan menolak request jika `salaryMin > salaryMax` atau jika requirements dikirim kosong (akan dibersihkan menjadi array kosong).
+
+## Wallet Reputation Analyzer
+- `POST /wallet-reputation/analyze` menerima `{ address, chainId, userId? }` lalu:
+  1. Mengumpulkan profil pseudo on-chain (tx count, NFT, DeFi, dll) memakai `OnchainCollectorService`.
+  2. Mengubah data mentah menjadi skor heuristik (`txnScore`, `tokenScore`, `nftScore`, `defiScore`, `contractScore`) + `riskScore`.
+  3. Menyimpan hasil ke Prisma `WalletReputation` (beserta `rawData` JSON) dan memicu `ZkService.generateProofForWalletScore` bila skor >= 300 (placeholder untuk integrasi Noir ke depannya).
+- `GET /wallet-reputation/:address?chainId=` mengembalikan snapshot terbaru atau `404` jika belum dianalisa.
+- Endpoint dilindungi `JwtAuthGuard`, sehingga FE cukup memakai backend JWT.
 
 ## Chat + Supabase Realtime
 - **Source of truth di Neon** – setiap percakapan & pesan tetap tersimpan di `ChatConversation`/`ChatMessage` melalui Prisma sehingga histori aman dan bisa di-query ulang (search, analytics).

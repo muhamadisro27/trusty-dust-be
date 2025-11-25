@@ -69,3 +69,8 @@
 
 ## 14. Changelog Initiation
 - Membuat `CHANGELOG.md` di root sebagai ringkasan perubahan penting (chat realtime, job metadata, perbaikan Swagger, dan cakupan testing baru).
+
+## 15. Wallet Reputation Analyzer
+- Menambah model Prisma `WalletReputation` + relasi user, serta module baru: `OnchainCollector` (pseudo on-chain metrics), `AiScoring` (heuristic scoring), dan `WalletReputation` (controller/service + DTO).
+- Endpoint `/api/v1/wallet-reputation/analyze` + `/api/v1/wallet-reputation/:address?chainId=` didefinisikan dengan `JwtAuthGuard`, menyimpan breakdown skor, memanggil stub ZK proof saat skor >= 300.
+- Menambahkan e2e test `test/wallet-reputation.e2e-spec.ts`, update README + guide untuk menjelaskan flow baru, dan memperluas `CHANGELOG` agar dokumentasi up-to-date.

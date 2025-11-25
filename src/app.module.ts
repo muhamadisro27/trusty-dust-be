@@ -18,6 +18,9 @@ import { NotificationModule } from './notifications/notification.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { ChatModule } from './chat/chat.module';
+import { OnchainCollectorModule } from './onchain-collector/onchain-collector.module';
+import { AiScoringModule } from './ai-scoring/ai-scoring.module';
+import { WalletReputationModule } from './wallet-reputation/wallet-reputation.module';
 
 @Module({
   imports: [
@@ -32,9 +35,12 @@ import { ChatModule } from './chat/chat.module';
     TierModule,
     SbtModule,
     ZkModule,
+    OnchainCollectorModule,
+    AiScoringModule,
     JobsModule,
     EscrowModule,
     ChatModule,
+    WalletReputationModule,
     NotificationModule,
   ],
   controllers: [AppController],

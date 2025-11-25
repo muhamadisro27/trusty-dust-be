@@ -47,6 +47,7 @@ model User {
   zkProofs       ZkProof[]
   chatParticipants ChatParticipant[]
   chatMessages     ChatMessage[]
+  walletReputations WalletReputation[]
 }
 
 model Post {
@@ -246,4 +247,26 @@ model ChatMessage {
   attachments    Json?
   metadata       Json?
   createdAt      DateTime         @default(now())
+}
+
+model WalletReputation {
+  id              String   @id @default(cuid())
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  address         String
+  chainId         Int
+  score           Int
+  tier            String
+  riskScore       Int
+  txnScore        Int
+  tokenScore      Int
+  nftScore        Int
+  defiScore       Int
+  contractScore   Int
+  rawData         Json?
+  zkProofId       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([address, chainId])
 }

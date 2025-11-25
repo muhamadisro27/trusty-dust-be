@@ -62,13 +62,22 @@ This document explains how the frontend (FE) should call the backend, the execut
 3. **Submit** – `POST /jobs/application/:id/submit` with `{ "workSubmissionText": "..." }` to mark work submitted.
 4. **Confirm** – `POST /jobs/application/:id/confirm` with `{ "txHash": "0x..." }`. Poster confirms, backend releases escrow, rewards worker (`TrustEvent job_completed`).
 
-## 7. Notifications
+## 7. Wallet Reputation Analyzer
+- Endpoint `POST /wallet-reputation/analyze` menerima `{ address, chainId, userId? }`. Setelah memanggil endpoint ini:
+  1. Backend menormalisasi alamat (`toLowerCase`) dan menjalankan `OnchainCollectorService` yang saat ini masih menghasilkan data pseudo-deterministik (placeholder sebelum terhubung ke RPC/indexer nyata).
+  2. Data mentah diteruskan ke `AiScoringService` untuk menghasilkan `txnScore`, `tokenScore`, `nftScore`, `defiScore`, `contractScore`, `riskScore`, dan total score 0–1000.
+  3. Snapshot disimpan ke tabel `WalletReputation` (beserta `rawData`). Jika skor >= 300 maka backend memanggil `ZkService.generateProofForWalletScore` (stub) sehingga nanti mudah diganti Noir proof.
+  4. Respons mengembalikan `{ address, chainId, score, tier, riskScore, breakdown }`.
+- `GET /wallet-reputation/:address?chainId=` selalu mengembalikan snapshot terakhir atau `404` jika belum analiz.
+- Semua endpoint berada di balik `JwtAuthGuard` → FE cukup kirim backend JWT.
+
+## 8. Notifications
 - `GET /notifications`: Poll for private notifications.
 - Websocket: connect via Socket.io to `ws://host:PORT` with query `userId=<id>` to join personal room. Events emitted:
   - `notification` – user-specific payload
   - `notification:public` – aggregate feed
 
-## 8. Chat + Supabase Realtime
+## 9. Chat + Supabase Realtime
 The chat module relies on Neon for storage and Supabase Realtime for fan-out updates.
 
 ### 8.1 REST endpoints
@@ -98,17 +107,17 @@ The chat module relies on Neon for storage and Supabase Realtime for fan-out upd
 ### 8.3 Typing indicators / read receipts
 Not implemented yet. FE can still reflect read state using `ChatParticipant.lastSeenAt` (available in the conversation list) by comparing timestamps with `ChatMessage.createdAt`.
 
-## 9. Local Testing Tips
+## 10. Local Testing Tips
 - Run `npm run prisma:migrate` and `npm run prisma:seed` before testing FE locally.
 - Use `npm run test:zk` after compiling the Noir circuit (via `nargo check` & `nargo compile`) to confirm prover artifacts exist.
 - Seed DUST balances via `prisma/seed.ts` when you need accounts with tokens.
 
-## 10. Error Handling
+## 11. Error Handling
 - Protected endpoints return `401` if JWT is missing/invalid.
 - Validation errors return `400` with details thanks to global `ValidationPipe`.
 - Resource issues (missing job, insufficient proofs, etc.) produce `404` or `400` with descriptive message.
 
-## 11. Environment Variables
+## 12. Environment Variables
 Ensure `.env` contains:
 - `DATABASE_URL` (Neon PostgreSQL connection string)
 - `JWT_SECRET`, `PRIVY_SECRET_KEY`

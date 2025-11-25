@@ -5,6 +5,7 @@
 ### Added
 - Supabase-powered chat module (REST + Realtime) with new `ChatConversation`, `ChatParticipant`, and `ChatMessage` tables. Added `/api/v1/chat/**` endpoints, Supabase client integration, and documentation for FE subscriptions.
 - Job creation payload now includes company details (logo/name/location), job type, requirements array, salary range, and closing date. Schema, DTO, services, and guides updated accordingly.
+- Wallet reputation analyzer stack: `OnchainCollectorService`, `AiScoringService`, and `WalletReputationModule` with REST endpoints to analyze + fetch wallet scores. Added Prisma `WalletReputation` model and example e2e test.
 
 ### Fixed
 - Swagger assets served via CDN so `/docs` works when deployed to Vercel/serverless.

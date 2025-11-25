@@ -73,4 +73,18 @@ export class ZkService {
       },
     });
   }
+
+  async generateProofForWalletScore(args: { userId?: string; score: number; minScore: number }) {
+    this.logger.log(
+      `Wallet score proof trigger for user ${args.userId ?? 'anonymous'} with score ${args.score}`,
+    );
+    if (!args.userId) {
+      // No linked user, skip actual proving. In the future we can support anon proofs.
+      return { proofId: null };
+    }
+
+    // TODO: integrate Noir/NoirJS proof generation for wallet-based score thresholds.
+    await this.queueProofRequest(args.userId, args.minScore);
+    return { proofId: null };
+  }
 }
