@@ -141,14 +141,25 @@ describe('JobsModule (e2e)', () => {
     });
     const token = await jwtService.signAsync({ userId: worker.id, walletAddress: worker.walletAddress });
 
+    const payload = {
+      cvUrl: 'https://cdn/cv.pdf',
+      portfolioLinks: ['https://behance.net/trusty'],
+      extraMetadata: { coverLetter: 'Ready to ship' },
+    };
+
     const response = await request(app.getHttpServer())
       .post(`/api/v1/jobs/${job.id}/apply`)
       .set('Authorization', `Bearer ${token}`)
-      .send({})
+      .send(payload)
       .expect(201);
 
     expect(response.body.status).toBe('APPLIED');
-    expect(prisma.jobApplication.count()).resolves.toBe(1);
+    const stored = await prisma.jobApplication.findFirst({
+      where: { jobId: job.id, workerId: worker.id },
+    });
+    expect(stored?.cvUrl).toBe(payload.cvUrl);
+    expect(stored?.portfolioLinks).toEqual(payload.portfolioLinks);
+    expect(stored?.extraMetadata).toEqual(payload.extraMetadata);
   });
 
   it('POST /jobs/application/:id/submit updates status', async () => {

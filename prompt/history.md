@@ -103,3 +103,9 @@
 - Menyusun ulang `ZkService`/controller agar menyediakan endpoint `/zk/generate` dengan input `{ score, minScore, userId? }`, memanfaatkan circuit baru `circuits/wallet_score` dan menyimpan hasil ke Prisma `ZkProof` (userId opsional).
 - Wallet Reputation kini mengembalikan `zkProofId`, reasoning, dan otomatis memanggil `generateScoreProof` saat skor >= 300. E2E/unit test diperbarui.
 - Dokumentasi (README + guide) diperbarui untuk menjelaskan alur hybrid AI, env baru, path circuit baru, serta endpoint `/zk/generate`.
+
+## 20. Job Application Payload Enhancements
+- `prisma/schema.prisma`: menambah field `cvUrl`, `portfolioLinks`, dan `extraMetadata` pada `JobApplication` untuk menyimpan informasi CV/porto tambahan. Sudah `prisma generate`.
+- `ApplyJobDto` + `JobsService.apply`: menerima CV URL, daftar portfolio (dibersihkan dari string kosong), serta metadata bebas, lalu menyimpannya ke database.
+- `jobs.service.spec.ts`: test unit diperluas guna memverifikasi field baru ikut dipersist dan bukti ZK diteruskan.
+- `test/jobs.e2e-spec.ts`: e2e apply job kini mengirim CV/portfolio/metadata dan melakukan assert terhadap nilai yang tersimpan.

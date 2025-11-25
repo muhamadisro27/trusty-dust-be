@@ -103,14 +103,31 @@ describe('JobsService', () => {
       await expect(service.apply('job', 'user', {} as any)).rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('asserts proof, spends dust, creates application, notifies poster', async () => {
+    it('asserts proof, spends dust, creates application with CV data, notifies poster', async () => {
       (prisma.job.findUnique as jest.Mock).mockResolvedValue({ creatorId: 'poster', status: 'OPEN', minTrustScore: 200 });
       (prisma.jobApplication.findFirst as jest.Mock).mockResolvedValue(null);
       (prisma.jobApplication.create as jest.Mock).mockResolvedValue({ id: 'application' });
 
-      const application = await service.apply('job', 'user', {} as any);
-      expect(zk.assertProof).toHaveBeenCalledWith('user', 200, undefined);
+      const dto = {
+        zkProofId: 'proof',
+        cvUrl: 'https://cdn/cv.pdf',
+        portfolioLinks: [' https://site.one ', ''],
+        extraMetadata: { coverLetter: 'Hi' },
+      } as any;
+
+      const application = await service.apply('job', 'user', dto);
+      expect(zk.assertProof).toHaveBeenCalledWith('user', 200, 'proof');
       expect(dust.spendDust).toHaveBeenCalledWith('user', 20, 'job_apply');
+      expect(prisma.jobApplication.create).toHaveBeenCalledWith({
+        data: {
+          jobId: 'job',
+          workerId: 'user',
+          status: 'APPLIED',
+          cvUrl: 'https://cdn/cv.pdf',
+          portfolioLinks: ['https://site.one'],
+          extraMetadata: { coverLetter: 'Hi' },
+        },
+      });
       expect(notification.notify).toHaveBeenCalledWith('poster', 'New job application received');
       expect(application).toEqual({ id: 'application' });
     });

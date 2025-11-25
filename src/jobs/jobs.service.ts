@@ -204,11 +204,19 @@ export class JobsService {
       throw new BadRequestException('Already applied');
     }
 
+    const portfolioLinks =
+      dto.portfolioLinks
+        ?.map((link) => link.trim())
+        .filter((link) => link.length > 0) ?? [];
+
     const application = await this.prisma.jobApplication.create({
       data: {
         jobId,
         workerId: userId,
         status: 'APPLIED',
+        cvUrl: dto.cvUrl,
+        portfolioLinks,
+        extraMetadata: dto.extraMetadata,
       },
     });
 

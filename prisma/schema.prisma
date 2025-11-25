@@ -4,7 +4,8 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 enum ReactionType {
@@ -176,6 +177,9 @@ model JobApplication {
   workerId           String
   worker             User               @relation("JobWorker", fields: [workerId], references: [id])
   status             ApplicationStatus  @default(APPLIED)
+  cvUrl              String?
+  portfolioLinks     String[]           @default([])
+  extraMetadata      Json?
   workSubmissionText String?
   confirmationTxHash String?
   createdAt          DateTime           @default(now())
