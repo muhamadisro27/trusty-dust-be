@@ -50,20 +50,51 @@ This document explains how the frontend (FE) should call the backend, the execut
   - `notification` – user-specific payload
   - `notification:public` – aggregate feed
 
-## 8. Local Testing Tips
+## 8. Chat + Supabase Realtime
+The chat module relies on Neon for storage and Supabase Realtime for fan-out updates.
+
+### 8.1 REST endpoints
+- `GET /chat/conversations` – list conversations where the user is a participant (includes last message snapshot).
+- `POST /chat/conversations` – body `{ "title": "optional", "participantIds": ["<userId>", ...] }`. Backend automatically adds the creator so FE only passes peers.
+- `GET /chat/conversations/:conversationId/messages?limit=50` – returns ordered messages with sender metadata. Call this whenever FE opens a DM to hydrate the UI.
+- `POST /chat/messages` – body `{ "conversationId": "cuid", "content": "gm", "attachments": ["https://..."], "metadata": { "jobId": "..."} }`.
+
+### 8.2 Supabase Realtime subscription
+1. FE authenticates to Supabase using the **anon/public key** (env `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`). Server-side backend uses service role; FE **must not** use it.
+2. After fetching `conversations`, FE subscribes to each channel using deterministic naming:
+   ```ts
+   const channel = supabase
+     .channel(`chat:${conversationId}`, { config: { broadcast: { self: false } } })
+     .on('broadcast', { event: 'message.new' }, (payload) => {
+       const message = payload.payload.message;
+       // optimistic insert into FE store
+     })
+     .on('broadcast', { event: 'conversation.created' }, (payload) => {
+       // refresh conversation list if current user is involved
+     })
+     .subscribe();
+   ```
+3. When FE sends a message (via `/chat/messages`), backend writes to Prisma, then broadcasts `message.new` so every subscriber (including sender) receives it in near real time.
+4. If FE disconnects, it should re-fetch `/chat/conversations/:id/messages` before resubscribing to avoid missing events. Use the `limit` query to paginate older messages (up to 200 per call).
+
+### 8.3 Typing indicators / read receipts
+Not implemented yet. FE can still reflect read state using `ChatParticipant.lastSeenAt` (available in the conversation list) by comparing timestamps with `ChatMessage.createdAt`.
+
+## 9. Local Testing Tips
 - Run `npm run prisma:migrate` and `npm run prisma:seed` before testing FE locally.
 - Use `npm run test:zk` after compiling the Noir circuit (via `nargo check` & `nargo compile`) to confirm prover artifacts exist.
 - Seed DUST balances via `prisma/seed.ts` when you need accounts with tokens.
 
-## 9. Error Handling
+## 10. Error Handling
 - Protected endpoints return `401` if JWT is missing/invalid.
 - Validation errors return `400` with details thanks to global `ValidationPipe`.
 - Resource issues (missing job, insufficient proofs, etc.) produce `404` or `400` with descriptive message.
 
-## 10. Environment Variables
+## 11. Environment Variables
 Ensure `.env` contains:
 - `DATABASE_URL` (Neon PostgreSQL connection string)
 - `JWT_SECRET`, `PRIVY_SECRET_KEY`
 - `RPC_URL` + contract addresses (`TRUST_VERIFICATION_ADDRESS`, `ESCROW_FACTORY_ADDRESS`, `DUST_TOKEN_ADDRESS`, `SBT_CONTRACT_ADDRESS`) and `ESCROW_SIGNER_KEY`
+- `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` (backend). FE must configure its own anon keys for subscriptions.
 
 Refer to this guide whenever implementing or debugging FE integration. Update the document alongside any API changes.

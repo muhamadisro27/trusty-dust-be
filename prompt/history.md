@@ -57,3 +57,7 @@
 - Memperluas Prisma schema (`ChatConversation`, `ChatParticipant`, `ChatMessage` + relasi di `User`) dan menyediakan e2e + unit test agar flow CRUD chat tervalidasi.
 - Mengintegrasikan Supabase Realtime menggunakan `@supabase/supabase-js` (service role key). Setiap pesan/percakapan baru otomatis broadcast ke channel `chat:<conversationId>`; ketika env kosong, service aman fallback tanpa realtime.
 - Update README + `.env.example` agar FE tahu env baru, endpoint baru, serta best practice penggunaan Supabase sebagai layer realtime di atas Neon/Postgres.
+
+## 12. Guide Update (Chat Integration)
+- Menambahkan section khusus pada `prompt/guide.md` yang menjelaskan alur REST chat, cara subscribe Supabase Realtime (channel naming, payload `message.new`/`conversation.created`), dan strategi reconnect FE sebelum resync pesan.
+- Menyorot env yang dibutuhkan (service role untuk backend, anon key untuk FE) serta batasan saat ini (belum ada typing indicator/read receipt) agar tim FE siap mengimplementasikan UI chat.
