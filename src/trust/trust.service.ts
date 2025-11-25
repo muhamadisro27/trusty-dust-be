@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
-import { DustService } from '@/dust/dust.service';
-import { TierService } from '@/tier/tier.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { DustService } from '../dust/dust.service';
+import { TierService } from '../tier/tier.service';
 
 @Injectable()
 export class TrustService {

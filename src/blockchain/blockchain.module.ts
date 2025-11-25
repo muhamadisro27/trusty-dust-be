@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
-import { BlockchainService } from '@/blockchain/blockchain.service';
-import { AbiLoaderService } from '@/blockchain/abi-loader.service';
+import { BlockchainService } from './blockchain.service';
+import { AbiLoaderService } from './abi-loader.service';
 import { ConfigModule } from '@nestjs/config';
 
 @Global()

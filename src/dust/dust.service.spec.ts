@@ -1,6 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
-import { DustService } from '@/dust/dust.service';
-import { PrismaService } from '@/prisma/prisma.service';
+import { DustService } from './dust.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('DustService', () => {
   const prisma = {

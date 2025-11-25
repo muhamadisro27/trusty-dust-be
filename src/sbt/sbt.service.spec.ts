@@ -1,6 +1,6 @@
-import { SbtService } from '@/sbt/sbt.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { BlockchainService } from '@/blockchain/blockchain.service';
+import { SbtService } from './sbt.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { BlockchainService } from '../blockchain/blockchain.service';
 
 describe('SbtService', () => {
   const prisma = {

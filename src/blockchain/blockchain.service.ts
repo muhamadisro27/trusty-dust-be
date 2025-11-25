@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { AbiLoaderService } from '@/blockchain/abi-loader.service';
+import { AbiLoaderService } from './abi-loader.service';
 import { Address, PublicClient, WalletClient, Chain, createPublicClient, createWalletClient, http, type Account } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 

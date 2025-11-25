@@ -2,7 +2,7 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { CompiledCircuit, Abi } from '@noir-lang/types';
-import { CIRCUIT_BUILD, CIRCUIT_FILES, readAcirBuffer } from '@/zk/zk.utils';
+import { CIRCUIT_BUILD, CIRCUIT_FILES, readAcirBuffer } from './zk.utils';
 
 interface CircuitManifest {
   name: string;

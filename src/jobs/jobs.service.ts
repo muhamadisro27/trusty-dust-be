@@ -1,14 +1,14 @@
 import { BadRequestException, Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
-import { DustService } from '@/dust/dust.service';
-import { TrustService } from '@/trust/trust.service';
-import { EscrowService } from '@/escrow/escrow.service';
-import { ZkService } from '@/zk/zk.service';
-import { NotificationService } from '@/notifications/notification.service';
-import { CreateJobDto } from '@/jobs/dto/create-job.dto';
-import { ApplyJobDto } from '@/jobs/dto/apply-job.dto';
-import { SubmitWorkDto } from '@/jobs/dto/submit-work.dto';
-import { ConfirmWorkDto } from '@/jobs/dto/confirm-work.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { DustService } from '../dust/dust.service';
+import { TrustService } from '../trust/trust.service';
+import { EscrowService } from '../escrow/escrow.service';
+import { ZkService } from '../zk/zk.service';
+import { NotificationService } from '../notifications/notification.service';
+import { CreateJobDto } from './dto/create-job.dto';
+import { ApplyJobDto } from './dto/apply-job.dto';
+import { SubmitWorkDto } from './dto/submit-work.dto';
+import { ConfirmWorkDto } from './dto/confirm-work.dto';
 
 @Injectable()
 export class JobsService {

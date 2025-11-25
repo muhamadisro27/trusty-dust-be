@@ -1,7 +1,7 @@
-import { TrustService } from '@/trust/trust.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { DustService } from '@/dust/dust.service';
-import { TierService } from '@/tier/tier.service';
+import { TrustService } from './trust.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { DustService } from '../dust/dust.service';
+import { TierService } from '../tier/tier.service';
 
 describe('TrustService', () => {
   const prisma = {

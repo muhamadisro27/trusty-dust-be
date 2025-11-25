@@ -1,6 +1,6 @@
-import { NotificationService } from '@/notifications/notification.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { NotificationGateway } from '@/notifications/notification.gateway';
+import { NotificationService } from './notification.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { NotificationGateway } from './notification.gateway';
 
 describe('NotificationService', () => {
   const prisma = {

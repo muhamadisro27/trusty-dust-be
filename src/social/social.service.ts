@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
-import { CreatePostDto } from '@/social/dto/create-post.dto';
-import { DustService } from '@/dust/dust.service';
-import { TrustService } from '@/trust/trust.service';
-import { NotificationService } from '@/notifications/notification.service';
-import { BoostPostDto } from '@/social/dto/boost-post.dto';
-import { ReactPostDto, ReactionAction } from '@/social/dto/react-post.dto';
-import { BlockchainService } from '@/blockchain/blockchain.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreatePostDto } from './dto/create-post.dto';
+import { DustService } from '../dust/dust.service';
+import { TrustService } from '../trust/trust.service';
+import { NotificationService } from '../notifications/notification.service';
+import { BoostPostDto } from './dto/boost-post.dto';
+import { ReactPostDto, ReactionAction } from './dto/react-post.dto';
+import { BlockchainService } from '../blockchain/blockchain.service';
 
 const DUST_REWARD_BY_ACTION: Record<ReactionAction, number> = {
   [ReactionAction.LIKE]: 1,

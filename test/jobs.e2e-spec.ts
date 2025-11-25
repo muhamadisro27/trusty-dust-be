@@ -1,13 +1,13 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
-import { AppModule } from '@/app.module';
-import { PrismaService } from '@/prisma/prisma.service';
+import { AppModule } from '../src/app.module';
+import { PrismaService } from '../src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
-import { DustService } from '@/dust/dust.service';
-import { ZkService } from '@/zk/zk.service';
-import { NotificationService } from '@/notifications/notification.service';
-import { EscrowService } from '@/escrow/escrow.service';
+import { DustService } from '../src/dust/dust.service';
+import { ZkService } from '../src/zk/zk.service';
+import { NotificationService } from '../src/notifications/notification.service';
+import { EscrowService } from '../src/escrow/escrow.service';
 
 describe('JobsModule (e2e)', () => {
   let app: INestApplication;

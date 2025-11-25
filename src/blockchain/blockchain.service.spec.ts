@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
-import { BlockchainService } from '@/blockchain/blockchain.service';
-import { AbiLoaderService } from '@/blockchain/abi-loader.service';
+import { BlockchainService } from './blockchain.service';
+import { AbiLoaderService } from './abi-loader.service';
 
 jest.mock('viem', () => ({
   createPublicClient: jest.fn(() => ({ readContract: jest.fn().mockResolvedValue(true) })),

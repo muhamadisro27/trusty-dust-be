@@ -1,6 +1,6 @@
-import { EscrowService } from '@/escrow/escrow.service';
-import { BlockchainService } from '@/blockchain/blockchain.service';
-import { PrismaService } from '@/prisma/prisma.service';
+import { EscrowService } from './escrow.service';
+import { BlockchainService } from '../blockchain/blockchain.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('EscrowService', () => {
   const blockchain = {

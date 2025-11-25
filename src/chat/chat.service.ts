@@ -2,9 +2,9 @@ import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nest
 import { ConfigService } from '@nestjs/config';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Prisma } from '@prisma/client';
-import { PrismaService } from '@/prisma/prisma.service';
-import { CreateConversationDto } from '@/chat/dto/create-conversation.dto';
-import { SendMessageDto } from '@/chat/dto/send-message.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateConversationDto } from './dto/create-conversation.dto';
+import { SendMessageDto } from './dto/send-message.dto';
 
 const DEFAULT_MESSAGE_LIMIT = 50;
 const MAX_MESSAGE_LIMIT = 200;

@@ -75,10 +75,8 @@
 - Endpoint `/api/v1/wallet-reputation/analyze` + `/api/v1/wallet-reputation/:address?chainId=` didefinisikan dengan `JwtAuthGuard`, menyimpan breakdown skor, memanggil stub ZK proof saat skor >= 300.
 - Menambahkan e2e test `test/wallet-reputation.e2e-spec.ts`, update README + guide untuk menjelaskan flow baru, dan memperluas `CHANGELOG` agar dokumentasi up-to-date.
 
-## 16. Path Alias Refactor
-- Mengaktifkan alias `@/` di `tsconfig.json` (plus Jest config & e2e config) dan memperbarui seluruh import internal agar tidak lagi memakai relatif `./`/`../`.
-- Menambahkan `tsconfig-paths/register` pada script (start/dev/debug/prod, seed, test:zk) sehingga runtime/ts-node memahami alias baru.
-- Memastikan skrip/tooling (jest, ts-node, e2e) memakai `moduleNameMapper`/registerer sesuai agar build & test tetap berjalan.
+## 16. Path Alias Cleanup
+- Menghapus alias `@/` dan mengembalikan seluruh import ke jalur relatif standar untuk menghindari masalah runtime (Vercel lambda tidak lagi membutuhkan `tsconfig-paths`). Script npm, konfigurasi Jest, dan dokumentasi disesuaikan kembali.
 
 ## 17. Hybrid Wallet Reputation + ZK Revamp
 - Mengupgrade `AiScoringService` menjadi pipeline hybrid: heuristik deterministik + overlay Gemini (via `GeminiClientService` dan util normalizer). Env `GEMINI_API_KEY` ditambahkan untuk mengaktifkan overlay.

@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
-import { SbtService } from '@/sbt/sbt.service';
-import { NotificationService } from '@/notifications/notification.service';
-import { ZkService } from '@/zk/zk.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { SbtService } from '../sbt/sbt.service';
+import { NotificationService } from '../notifications/notification.service';
+import { ZkService } from '../zk/zk.service';
 
 const TIERS = [
   { name: 'Dust', min: 0 },

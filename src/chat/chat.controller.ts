@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import type { RequestUser } from '@/common/interfaces/request-user.interface';
-import { ChatService } from '@/chat/chat.service';
-import { CreateConversationDto } from '@/chat/dto/create-conversation.dto';
-import { SendMessageDto } from '@/chat/dto/send-message.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { RequestUser } from '../common/interfaces/request-user.interface';
+import { ChatService } from './chat.service';
+import { CreateConversationDto } from './dto/create-conversation.dto';
+import { SendMessageDto } from './dto/send-message.dto';
 
 @ApiTags('Chat')
 @ApiBearerAuth('backend-jwt')

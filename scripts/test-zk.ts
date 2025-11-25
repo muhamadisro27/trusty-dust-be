@@ -1,9 +1,9 @@
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '@/prisma/prisma.service';
-import { AbiLoaderService } from '@/blockchain/abi-loader.service';
-import { BlockchainService } from '@/blockchain/blockchain.service';
-import { ZkCompiler } from '@/zk/zk.compiler';
-import { ZkProver } from '@/zk/zk.prover';
+import { PrismaService } from '../src/prisma/prisma.service';
+import { AbiLoaderService } from '../src/blockchain/abi-loader.service';
+import { BlockchainService } from '../src/blockchain/blockchain.service';
+import { ZkCompiler } from '../src/zk/zk.compiler';
+import { ZkProver } from '../src/zk/zk.prover';
 
 async function main() {
   const compiler = new ZkCompiler();

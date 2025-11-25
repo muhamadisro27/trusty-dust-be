@@ -1,8 +1,8 @@
-import { TierService } from '@/tier/tier.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { SbtService } from '@/sbt/sbt.service';
-import { NotificationService } from '@/notifications/notification.service';
-import { ZkService } from '@/zk/zk.service';
+import { TierService } from './tier.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { SbtService } from '../sbt/sbt.service';
+import { NotificationService } from '../notifications/notification.service';
+import { ZkService } from '../zk/zk.service';
 
 describe('TierService', () => {
   const prisma = {

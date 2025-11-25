@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { PrismaService } from '@/prisma/prisma.service';
-import { UpdateUserDto } from '@/users/dto/update-user.dto';
-import { PrivyUserPayload } from '@/auth/interfaces/privy-user.interface';
+import { PrismaService } from '../prisma/prisma.service';
+import { UpdateUserDto } from './dto/update-user.dto';
+import { PrivyUserPayload } from '../auth/interfaces/privy-user.interface';
 
 @Injectable()
 export class UsersService {

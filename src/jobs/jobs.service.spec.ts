@@ -1,11 +1,11 @@
 import { BadRequestException, NotFoundException } from '@nestjs/common';
-import { JobsService } from '@/jobs/jobs.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { DustService } from '@/dust/dust.service';
-import { TrustService } from '@/trust/trust.service';
-import { EscrowService } from '@/escrow/escrow.service';
-import { ZkService } from '@/zk/zk.service';
-import { NotificationService } from '@/notifications/notification.service';
+import { JobsService } from './jobs.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { DustService } from '../dust/dust.service';
+import { TrustService } from '../trust/trust.service';
+import { EscrowService } from '../escrow/escrow.service';
+import { ZkService } from '../zk/zk.service';
+import { NotificationService } from '../notifications/notification.service';
 
 describe('JobsService', () => {
   const prisma = {

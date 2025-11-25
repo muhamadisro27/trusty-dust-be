@@ -1,4 +1,4 @@
-import { WalletOnchainProfile } from '@/onchain-collector/onchain-collector.types';
+import { WalletOnchainProfile } from '../onchain-collector/onchain-collector.types';
 
 export type ReputationTier = 'Dust' | 'Spark' | 'Flare' | 'Nova';
 

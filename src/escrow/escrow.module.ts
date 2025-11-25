@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
-import { EscrowService } from '@/escrow/escrow.service';
-import { BlockchainModule } from '@/blockchain/blockchain.module';
-import { PrismaModule } from '@/prisma/prisma.module';
+import { EscrowService } from './escrow.service';
+import { BlockchainModule } from '../blockchain/blockchain.module';
+import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [BlockchainModule, PrismaModule],

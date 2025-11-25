@@ -2,10 +2,10 @@ import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
-import { AuthService } from '@/auth/auth.service';
-import { UsersService } from '@/users/users.service';
-import { PrivyUserPayload } from '@/auth/interfaces/privy-user.interface';
-import { JwtPayload } from '@/auth/interfaces/jwt-payload.interface';
+import { AuthService } from './auth.service';
+import { UsersService } from '../users/users.service';
+import { PrivyUserPayload } from './interfaces/privy-user.interface';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 jest.mock('axios');
 

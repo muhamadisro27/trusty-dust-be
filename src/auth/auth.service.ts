@@ -2,9 +2,9 @@ import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import axios, { AxiosInstance } from 'axios';
 import { ConfigService } from '@nestjs/config';
-import { UsersService } from '@/users/users.service';
-import { PrivyUserPayload } from '@/auth/interfaces/privy-user.interface';
-import { JwtPayload } from '@/auth/interfaces/jwt-payload.interface';
+import { UsersService } from '../users/users.service';
+import { PrivyUserPayload } from './interfaces/privy-user.interface';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {

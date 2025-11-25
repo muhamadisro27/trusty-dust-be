@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { WalletOnchainProfile } from '@/onchain-collector/onchain-collector.types';
-import { GeminiClientService } from '@/ai-scoring/gemini-client.service';
-import { WalletScoreBreakdown, ReputationTier } from '@/ai-scoring/ai-scoring.types';
-import { clamp100, clamp1000, weight } from '@/ai-scoring/ai-normalizer.util';
+import { WalletOnchainProfile } from '../onchain-collector/onchain-collector.types';
+import { GeminiClientService } from './gemini-client.service';
+import { WalletScoreBreakdown, ReputationTier } from './ai-scoring.types';
+import { clamp100, clamp1000, weight } from './ai-normalizer.util';
 
 interface HeuristicScores extends WalletScoreBreakdown {}
 

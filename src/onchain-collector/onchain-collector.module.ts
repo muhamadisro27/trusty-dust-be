@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { OnchainCollectorService } from '@/onchain-collector/onchain-collector.service';
+import { OnchainCollectorService } from './onchain-collector.service';
 
 @Module({
   providers: [OnchainCollectorService],

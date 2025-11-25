@@ -1,12 +1,12 @@
 import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { SocialService } from '@/social/social.service';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import type { RequestUser } from '@/common/interfaces/request-user.interface';
-import { CreatePostDto } from '@/social/dto/create-post.dto';
-import { ReactPostDto } from '@/social/dto/react-post.dto';
-import { BoostPostDto } from '@/social/dto/boost-post.dto';
+import { SocialService } from './social.service';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { RequestUser } from '../common/interfaces/request-user.interface';
+import { CreatePostDto } from './dto/create-post.dto';
+import { ReactPostDto } from './dto/react-post.dto';
+import { BoostPostDto } from './dto/boost-post.dto';
 
 @ApiTags('Social')
 @ApiBearerAuth('backend-jwt')

@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { AuthService } from '@/auth/auth.service';
-import { AuthController } from '@/auth/auth.controller';
-import { UsersModule } from '@/users/users.module';
-import { JwtStrategy } from '@/auth/strategies/jwt.strategy';
-import { PrivyAuthGuard } from '@/common/guards/privy-auth.guard';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
+import { UsersModule } from '../users/users.module';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { PrivyAuthGuard } from '../common/guards/privy-auth.guard';
 
 @Module({
   imports: [

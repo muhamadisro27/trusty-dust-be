@@ -1,11 +1,11 @@
 import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import { PrismaService } from '@/prisma/prisma.service';
-import { OnchainCollectorService } from '@/onchain-collector/onchain-collector.service';
-import { AiScoringService } from '@/ai-scoring/ai-scoring.service';
-import { AnalyzeWalletDto } from '@/wallet-reputation/dto/analyze-wallet.dto';
-import { WalletOnchainProfile } from '@/onchain-collector/onchain-collector.types';
-import { WalletScoreBreakdown } from '@/ai-scoring/ai-scoring.types';
+import { PrismaService } from '../prisma/prisma.service';
+import { OnchainCollectorService } from '../onchain-collector/onchain-collector.service';
+import { AiScoringService } from '../ai-scoring/ai-scoring.service';
+import { AnalyzeWalletDto } from './dto/analyze-wallet.dto';
+import { WalletOnchainProfile } from '../onchain-collector/onchain-collector.types';
+import { WalletScoreBreakdown } from '../ai-scoring/ai-scoring.types';
 
 export interface WalletScoreProofGateway {
   generateScoreProof(args: {

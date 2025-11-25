@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'node:crypto';
-import { WalletOnchainProfile } from '@/onchain-collector/onchain-collector.types';
+import { WalletOnchainProfile } from './onchain-collector.types';
 
 /**
  * OnchainCollectorService would normally call RPC/indexer APIs (e.g., Covalent, Alchemy, custom subgraphs).

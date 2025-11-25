@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import initNoirWasm, { Noir } from '@noir-lang/noir_wasm';
 import { BarretenbergBackend } from '@noir-lang/backend_barretenberg';
-import { ZkCompiler } from '@/zk/zk.compiler';
-import { ZkProofResult, ZkWitnessInput } from '@/zk/zk.types';
-import { bufferToHex } from '@/zk/zk.utils';
+import { ZkCompiler } from './zk.compiler';
+import { ZkProofResult, ZkWitnessInput } from './zk.types';
+import { bufferToHex } from './zk.utils';
 
 @Injectable()
 export class ZkProver {

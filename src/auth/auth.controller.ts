@@ -1,8 +1,8 @@
 import { BadRequestException, Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { AuthService } from '@/auth/auth.service';
-import { LoginDto } from '@/auth/dto/login.dto';
-import { PrivyAuthGuard } from '@/common/guards/privy-auth.guard';
+import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { PrivyAuthGuard } from '../common/guards/privy-auth.guard';
 
 @ApiTags('Auth')
 @Controller('auth')

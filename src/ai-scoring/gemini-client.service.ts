@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { GenerativeModel } from '@google/generative-ai';
-import { safeParse } from '@/ai-scoring/ai-normalizer.util';
+import { safeParse } from './ai-normalizer.util';
 
 type GeminiJsonResponse = {
   txnScore?: number;

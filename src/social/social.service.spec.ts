@@ -1,11 +1,11 @@
 import { NotFoundException } from '@nestjs/common';
-import { SocialService } from '@/social/social.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { DustService } from '@/dust/dust.service';
-import { TrustService } from '@/trust/trust.service';
-import { NotificationService } from '@/notifications/notification.service';
-import { BlockchainService } from '@/blockchain/blockchain.service';
-import { ReactionAction } from '@/social/dto/react-post.dto';
+import { SocialService } from './social.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { DustService } from '../dust/dust.service';
+import { TrustService } from '../trust/trust.service';
+import { NotificationService } from '../notifications/notification.service';
+import { BlockchainService } from '../blockchain/blockchain.service';
+import { ReactionAction } from './dto/react-post.dto';
 
 describe('SocialService', () => {
   const prisma = {

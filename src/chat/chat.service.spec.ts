@@ -1,7 +1,7 @@
 import { ForbiddenException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ChatService } from '@/chat/chat.service';
-import { PrismaService } from '@/prisma/prisma.service';
+import { ChatService } from './chat.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('ChatService', () => {
   const prisma = {

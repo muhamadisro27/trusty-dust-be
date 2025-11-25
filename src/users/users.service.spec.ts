@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
-import { UsersService } from '@/users/users.service';
-import { PrismaService } from '@/prisma/prisma.service';
-import { PrivyUserPayload } from '@/auth/interfaces/privy-user.interface';
+import { UsersService } from './users.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { PrivyUserPayload } from '../auth/interfaces/privy-user.interface';
 
 describe('UsersService', () => {
   const prisma = {

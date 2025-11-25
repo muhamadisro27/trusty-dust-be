@@ -1,13 +1,13 @@
 import { Body, Controller, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JobsService } from '@/jobs/jobs.service';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import type { RequestUser } from '@/common/interfaces/request-user.interface';
-import { CreateJobDto } from '@/jobs/dto/create-job.dto';
-import { ApplyJobDto } from '@/jobs/dto/apply-job.dto';
-import { SubmitWorkDto } from '@/jobs/dto/submit-work.dto';
-import { ConfirmWorkDto } from '@/jobs/dto/confirm-work.dto';
+import { JobsService } from './jobs.service';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { RequestUser } from '../common/interfaces/request-user.interface';
+import { CreateJobDto } from './dto/create-job.dto';
+import { ApplyJobDto } from './dto/apply-job.dto';
+import { SubmitWorkDto } from './dto/submit-work.dto';
+import { ConfirmWorkDto } from './dto/confirm-work.dto';
 
 @ApiTags('Jobs')
 @ApiBearerAuth('backend-jwt')

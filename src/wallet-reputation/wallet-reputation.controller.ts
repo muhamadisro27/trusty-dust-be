@@ -1,8 +1,8 @@
 import { Controller, Get, Param, ParseIntPipe, Post, Query, Body, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
-import { WalletReputationService } from '@/wallet-reputation/wallet-reputation.service';
-import { AnalyzeWalletDto } from '@/wallet-reputation/dto/analyze-wallet.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { WalletReputationService } from './wallet-reputation.service';
+import { AnalyzeWalletDto } from './dto/analyze-wallet.dto';
 
 @ApiTags('Wallet Reputation')
 @ApiBearerAuth('backend-jwt')

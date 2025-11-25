@@ -1,9 +1,9 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { ZkService } from '@/zk/zk.service';
-import { GenerateScoreProofDto } from '@/zk/dto/generate-score-proof.dto';
-import { VerifyCalldataDto } from '@/zk/dto/verify-calldata.dto';
-import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { ZkService } from './zk.service';
+import { GenerateScoreProofDto } from './dto/generate-score-proof.dto';
+import { VerifyCalldataDto } from './dto/verify-calldata.dto';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @ApiTags('Zero Knowledge')
 @ApiBearerAuth('backend-jwt')
