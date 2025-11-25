@@ -66,3 +66,6 @@
 - Menyesuaikan Prisma schema & DTO agar job memiliki metadata lengkap (companyName/logo, location, jobType, requirements array, salaryMin/max, closeAt).
 - Memperbarui `JobsService` (validasi salary range + normalisasi requirement), unit test (`jobs.service.spec.ts`), dan e2e sample payload supaya sesuai UI baru.
 - Mengupdate seed data, README, dan integration guide dengan contoh payload lengkap sehingga FE tahu field apa yang wajib/opsional.
+
+## 14. Changelog Initiation
+- Membuat `CHANGELOG.md` di root sebagai ringkasan perubahan penting (chat realtime, job metadata, perbaikan Swagger, dan cakupan testing baru).
