@@ -6,7 +6,6 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
-import { PrivyAuthGuard } from '../common/guards/privy-auth.guard';
 
 @Module({
   imports: [
@@ -17,12 +16,13 @@ import { PrivyAuthGuard } from '../common/guards/privy-auth.guard';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: '7d' },
+        signOptions: { expiresIn: '1d' },
       }),
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, PrivyAuthGuard, ThrottlerGuard],
-  exports: [AuthService, JwtStrategy, PrivyAuthGuard, JwtModule],
+  providers: [AuthService, JwtStrategy, ThrottlerGuard],
+  exports: [AuthService, JwtStrategy, JwtModule],
 })
+
 export class AuthModule {}

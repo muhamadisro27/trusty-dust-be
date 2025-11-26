@@ -24,7 +24,7 @@ export class JobsController {
   @ApiOperation({ summary: 'List jobs created by current user' })
   @ApiOkResponse({ description: 'Array of job postings owned by the requester' })
   listMyJobs(@CurrentUser() user: RequestUser) {
-    return this.jobsService.listMyJobs(user.id);
+    return this.jobsService.listMyJobs(user.userId);
   }
 
   @Get('applications/me')
@@ -35,7 +35,7 @@ export class JobsController {
     @CurrentUser() user: RequestUser,
     @Query() query: MyApplicationsQueryDto,
   ) {
-    return this.jobsService.listMyApplications(user.id, query.limit);
+    return this.jobsService.listMyApplications(user.userId, query.limit);
   }
 
   @Get(':id/applicants')
@@ -43,7 +43,7 @@ export class JobsController {
   @ApiOperation({ summary: 'List applicants for a job owned by the current user' })
   @ApiOkResponse({ description: 'Array of job applications for the job' })
   listApplicants(@CurrentUser() user: RequestUser, @Param('id') jobId: string) {
-    return this.jobsService.listApplicants(jobId, user.id);
+    return this.jobsService.listApplicants(jobId, user.userId);
   }
 
   @Get('search')
@@ -65,7 +65,7 @@ export class JobsController {
   @ApiOperation({ summary: 'Create job, burn DUST, and lock escrow' })
   @ApiCreatedResponse({ description: 'Job record created' })
   create(@CurrentUser() user: RequestUser, @Body() dto: CreateJobDto) {
-    return this.jobsService.createJob(user.id, dto);
+    return this.jobsService.createJob(user.userId, dto);
   }
 
   @Post(':id/apply')
@@ -73,7 +73,7 @@ export class JobsController {
   @ApiOperation({ summary: 'Apply to a job with ZK proof and DUST burn' })
   @ApiOkResponse({ description: 'Application created' })
   apply(@CurrentUser() user: RequestUser, @Param('id') jobId: string, @Body() dto: ApplyJobDto) {
-    return this.jobsService.apply(jobId, user.id, dto);
+    return this.jobsService.apply(jobId, user.userId, dto);
   }
 
   @Post('application/:id/submit')
@@ -85,7 +85,7 @@ export class JobsController {
     @Param('id') applicationId: string,
     @Body() dto: SubmitWorkDto,
   ) {
-    return this.jobsService.submit(applicationId, user.id, dto);
+    return this.jobsService.submit(applicationId, user.userId, dto);
   }
 
   @Post('application/:id/confirm')
@@ -97,6 +97,6 @@ export class JobsController {
     @Param('id') applicationId: string,
     @Body() dto: ConfirmWorkDto,
   ) {
-    return this.jobsService.confirm(applicationId, user.id, dto);
+    return this.jobsService.confirm(applicationId, user.userId, dto);
   }
 }

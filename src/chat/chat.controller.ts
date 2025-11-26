@@ -20,14 +20,14 @@ export class ChatController {
   @ApiOperation({ summary: 'List conversations the user participates in' })
   @ApiOkResponse({ description: 'Array of conversations with last message snapshot' })
   listConversations(@CurrentUser() user: RequestUser) {
-    return this.chatService.listConversations(user.id);
+    return this.chatService.listConversations(user.userId);
   }
 
   @Post('conversations')
   @Throttle({ chatCreate: { limit: 20, ttl: 60 } })
   @ApiOperation({ summary: 'Create a new conversation' })
   createConversation(@CurrentUser() user: RequestUser, @Body() dto: CreateConversationDto) {
-    return this.chatService.createConversation(user.id, dto);
+    return this.chatService.createConversation(user.userId, dto);
   }
 
   @Get('conversations/:conversationId/messages')
@@ -40,7 +40,7 @@ export class ChatController {
   ) {
     const parsedLimit = Number(limit);
     return this.chatService.listMessages(
-      user.id,
+      user.userId,
       conversationId,
       Number.isFinite(parsedLimit) ? parsedLimit : undefined,
     );
@@ -50,6 +50,6 @@ export class ChatController {
   @Throttle({ chatSend: { limit: 60, ttl: 60 } })
   @ApiOperation({ summary: 'Send a chat message and broadcast via Supabase realtime' })
   sendMessage(@CurrentUser() user: RequestUser, @Body() dto: SendMessageDto) {
-    return this.chatService.sendMessage(user.id, dto);
+    return this.chatService.sendMessage(user.userId, dto);
   }
 }

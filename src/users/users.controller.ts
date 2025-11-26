@@ -20,7 +20,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Fetch current user profile' })
   @ApiOkResponse({ description: 'Returns user profile persisted in DB' })
   me(@CurrentUser() user: RequestUser) {
-    return this.usersService.findById(user.id);
+    return this.usersService.findById(user.userId);
   }
 
   @Patch('me')
@@ -28,7 +28,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update username and avatar' })
   @ApiOkResponse({ description: 'Updated user record' })
   updateProfile(@CurrentUser() user: RequestUser, @Body() dto: UpdateUserDto) {
-    return this.usersService.updateProfile(user.id, dto);
+    return this.usersService.updateProfile(user.userId, dto);
   }
 
   @Get('search/people')
@@ -37,7 +37,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Search people by keyword, title, or job type' })
   @ApiOkResponse({ description: 'Paginated list of people' })
   searchPeople(@CurrentUser() user: RequestUser, @Query() query: SearchPeopleQueryDto) {
-    return this.usersService.searchPeople(user.id, query);
+    return this.usersService.searchPeople(user.userId, query);
   }
 
   @Get('suggested')
@@ -45,7 +45,7 @@ export class UsersController {
   @Throttle({ usersSuggested: { limit: 30, ttl: 60 } })
   @ApiOperation({ summary: 'Suggested people with similar tier/job type' })
   suggested(@CurrentUser() user: RequestUser) {
-    return this.usersService.suggestedPeople(user.id);
+    return this.usersService.suggestedPeople(user.userId);
   }
 
   @Post(':id/follow')
@@ -53,7 +53,7 @@ export class UsersController {
   @Throttle({ usersFollow: { limit: 120, ttl: 60 } })
   @ApiOperation({ summary: 'Follow a user' })
   follow(@CurrentUser() user: RequestUser, @Param('id') targetId: string) {
-    return this.usersService.followUser(user.id, targetId);
+    return this.usersService.followUser(user.userId, targetId);
   }
 
   @Delete(':id/follow')
@@ -61,13 +61,13 @@ export class UsersController {
   @Throttle({ usersFollow: { limit: 120, ttl: 60 } })
   @ApiOperation({ summary: 'Unfollow a user' })
   unfollow(@CurrentUser() user: RequestUser, @Param('id') targetId: string) {
-    return this.usersService.unfollowUser(user.id, targetId);
+    return this.usersService.unfollowUser(user.userId, targetId);
   }
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Get public profile for another user' })
   profile(@CurrentUser() user: RequestUser, @Param('id') targetId: string) {
-    return this.usersService.getPublicProfile(user.id, targetId);
+    return this.usersService.getPublicProfile(user.userId, targetId);
   }
 
   @Get(':id/posts')
@@ -79,7 +79,7 @@ export class UsersController {
     @Param('id') targetId: string,
     @Query() query: ProfileFeedQueryDto,
   ) {
-    return this.usersService.listUserPosts(user.id, targetId, query);
+    return this.usersService.listUserPosts(user.userId, targetId, query);
   }
 
   @Get(':id/jobs')
@@ -91,6 +91,6 @@ export class UsersController {
     @Param('id') targetId: string,
     @Query() query: ProfileFeedQueryDto,
   ) {
-    return this.usersService.listUserJobs(targetId, query, user.id);
+    return this.usersService.listUserJobs(targetId, query, user.userId);
   }
 }

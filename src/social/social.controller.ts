@@ -23,7 +23,7 @@ export class SocialController {
   @ApiOperation({ summary: 'Retrieve paginated social feed' })
   @ApiOkResponse({ description: 'List of posts with reaction counts and previews' })
   listPosts(@CurrentUser() user: RequestUser, @Query() query: ListPostsQueryDto) {
-    return this.socialService.listPosts(user.id, query);
+    return this.socialService.listPosts(user.userId, query);
   }
 
   @Get('posts/:id')
@@ -35,7 +35,7 @@ export class SocialController {
     @Param('id') postId: string,
     @Query() query: PostDetailQueryDto,
   ) {
-    return this.socialService.getPostDetail(user.id, postId, query);
+    return this.socialService.getPostDetail(user.userId, postId, query);
   }
 
   @Post('posts')
@@ -43,7 +43,7 @@ export class SocialController {
   @ApiOperation({ summary: 'Create post and earn DUST reward' })
   @ApiCreatedResponse({ description: 'Returns created post with media records' })
   create(@CurrentUser() user: RequestUser, @Body() dto: CreatePostDto) {
-    return this.socialService.createPost(user.id, dto);
+    return this.socialService.createPost(user.userId, dto);
   }
 
   @Post('posts/:id/react')
@@ -55,7 +55,7 @@ export class SocialController {
     @Param('id') postId: string,
     @Body() dto: ReactPostDto,
   ) {
-    return this.socialService.reactToPost(user.id, postId, dto);
+    return this.socialService.reactToPost(user.userId, postId, dto);
   }
 
   @Post('posts/:id/boost')
@@ -67,6 +67,6 @@ export class SocialController {
     @Param('id') postId: string,
     @Body() dto: BoostPostDto,
   ) {
-    return this.socialService.boostPost(user.id, postId, dto);
+    return this.socialService.boostPost(user.userId, postId, dto);
   }
 }

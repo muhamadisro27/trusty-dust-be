@@ -1,7 +1,4 @@
 export interface RequestUser {
-  id: string;
+  userId: string;
   walletAddress: string;
-  username?: string | null;
-  tier: string;
-  trustScore?: number;
 }

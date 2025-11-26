@@ -3,11 +3,20 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthService } from '../auth.service';
-import { JwtPayload } from '../interfaces/jwt-payload.interface';
+
+export interface JwtPayload {
+  sub: string;
+  walletAddress: string;
+  iat?: number;
+  exp?: number;
+}
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly configService: ConfigService, private readonly authService: AuthService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly authService: AuthService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -16,17 +25,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload) {
-    const user = await this.authService.validateUser(payload);
-    if (!user) {
-      throw new UnauthorizedException('User not found');
+    if (!payload?.sub || !payload?.walletAddress) {
+      throw new UnauthorizedException('Invalid JWT payload');
     }
 
+    // Di tahap ini kita tidak hit DB dulu; cukup normalisasi payload
+    // sehingga bisa diakses via `req.user` di guard/controller.
     return {
-      id: user.id,
-      walletAddress: user.walletAddress,
-      username: user.username,
-      tier: user.tier,
-      trustScore: user.trustScore,
+      userId: payload.sub,
+      walletAddress: payload.walletAddress,
     };
   }
 }

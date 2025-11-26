@@ -18,6 +18,6 @@ export class TierController {
   @ApiOperation({ summary: 'Retrieve tier + history for current user' })
   @ApiOkResponse({ description: 'Tier name plus historical entries' })
   me(@CurrentUser() user: RequestUser) {
-    return this.tierService.getMyTier(user.id);
+    return this.tierService.getMyTier(user.userId);
   }
 }

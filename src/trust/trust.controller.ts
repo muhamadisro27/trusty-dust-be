@@ -18,6 +18,6 @@ export class TrustController {
   @ApiOperation({ summary: 'Get computed trust score for current user' })
   @ApiOkResponse({ description: 'Numeric trust score (0-1000)' })
   score(@CurrentUser() user: RequestUser) {
-    return this.trustService.getScore(user.id);
+    return this.trustService.getScore(user.userId);
   }
 }

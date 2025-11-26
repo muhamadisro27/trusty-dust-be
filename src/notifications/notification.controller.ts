@@ -18,7 +18,7 @@ export class NotificationController {
   @ApiOperation({ summary: 'List stored notifications for user' })
   @ApiOkResponse({ description: 'List of notifications sorted desc' })
   list(@CurrentUser() user: RequestUser) {
-    return this.notificationService.list(user.id);
+    return this.notificationService.list(user.userId);
   }
 
   @Patch(':id/read')
@@ -26,6 +26,6 @@ export class NotificationController {
   @ApiOperation({ summary: 'Mark notification as read' })
   @ApiOkResponse({ description: 'Updated notification entry' })
   markAsRead(@CurrentUser() user: RequestUser, @Param('id') notificationId: string) {
-    return this.notificationService.markAsRead(user.id, notificationId);
+    return this.notificationService.markAsRead(user.userId, notificationId);
   }
 }

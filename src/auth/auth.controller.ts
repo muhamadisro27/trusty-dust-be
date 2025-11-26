@@ -1,34 +1,56 @@
-import { BadRequestException, Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
-import { Request } from 'express';
+import { Body, Controller, Post, UnauthorizedException } from '@nestjs/common';
+import { ApiBody, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
-import { LoginDto } from './dto/login.dto';
-import { PrivyAuthGuard } from '../common/guards/privy-auth.guard';
-import { PrivyUserPayload } from './interfaces/privy-user.interface';
-
-type PrivyRequest = Request & { privyUser?: PrivyUserPayload };
+import { LoginByWalletDto } from './dto/login-by-wallet.dto';
+import { User } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { JwtService } from '@nestjs/jwt';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+  ) {}
 
-  @Post('login')
-  @UseGuards(ThrottlerGuard, PrivyAuthGuard)
   @Throttle({ auth: { limit: 5, ttl: 60 } })
-  @ApiBearerAuth('privy')
   @ApiOperation({ summary: 'Verify Privy token and mint backend JWT' })
-  @ApiBody({ type: LoginDto, required: false })
+  @ApiBody({ type: LoginByWalletDto, required: false })
   @ApiOkResponse({ description: 'Backend JWT plus user profile' })
-  async login(@Body() body: LoginDto, @Req() req: PrivyRequest) {
-    if (req?.privyUser) {
-      return this.authService.issueBackendToken(req.privyUser);
+  @Post('login')
+  async loginByWallet(@Body() dto: LoginByWalletDto): Promise<any> {
+    console.log(dto);
+    const walletAddress = dto.walletAddress.toLowerCase();
+    const invalidReason = await this.authService.verifySignature(dto);
+    if (invalidReason) {
+      throw new UnauthorizedException(invalidReason);
     }
 
-    if (!body.privyToken) {
-      throw new BadRequestException('Privy token required');
+    let user: User;
+
+    const findWallet = await this.prisma.user.findUnique({
+      where: { walletAddress: walletAddress },
+    });
+
+    if (findWallet) {
+      user = findWallet;
+    } else {
+      user = await this.prisma.user.create({
+        data: {
+          walletAddress,
+        },
+      });
     }
-    return this.authService.loginWithPrivyToken(body.privyToken);
+
+    return {
+      jwt: this.jwtService.sign({
+        sub: user.id,
+        walletAddress: walletAddress,
+      }),
+      data: user,
+    };
   }
 }
