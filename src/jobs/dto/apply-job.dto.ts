@@ -32,5 +32,5 @@ export class ApplyJobDto {
   })
   @IsOptional()
   @IsObject()
-  extraMetadata?: Record<string, any>;
+  extraMetadata?: Record<string, unknown>;
 }

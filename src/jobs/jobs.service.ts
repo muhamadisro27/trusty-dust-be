@@ -237,7 +237,7 @@ export class JobsService {
         status: 'APPLIED',
         cvUrl: dto.cvUrl,
         portfolioLinks,
-        extraMetadata: dto.extraMetadata,
+        extraMetadata: dto.extraMetadata as Prisma.InputJsonValue | undefined,
       },
     });
 

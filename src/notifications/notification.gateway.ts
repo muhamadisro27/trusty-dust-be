@@ -1,6 +1,7 @@
 import { WebSocketGateway, WebSocketServer, OnGatewayConnection } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import type { Notification } from '@prisma/client';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class NotificationGateway implements OnGatewayConnection {
@@ -16,7 +17,7 @@ export class NotificationGateway implements OnGatewayConnection {
     }
   }
 
-  emit(userId: string, payload: any) {
+  emit(userId: string, payload: Notification) {
     if (!this.server) {
       return;
     }

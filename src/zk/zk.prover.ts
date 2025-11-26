@@ -27,7 +27,11 @@ export class ZkProver {
   async createWitness(input: ZkWitnessInput) {
     await this.ensureInitialized();
     this.logger.debug(`Creating witness for score ${input.score} and minScore ${input.minScore}`);
-    return this.noir!.execute(input as any);
+    const witnessInput: Record<string, string> = {
+      score: input.score,
+      minScore: input.minScore,
+    };
+    return this.noir!.execute(witnessInput);
   }
 
   async generateProof(input: ZkWitnessInput): Promise<ZkProofResult> {
