@@ -5,6 +5,7 @@ import { TrustService } from './trust.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { RequestUser } from '../common/interfaces/request-user.interface';
+import { TrustScoreResponseDto } from './dto/trust-score-response.dto';
 
 @ApiTags('Trust')
 @ApiBearerAuth('backend-jwt')
@@ -16,8 +17,8 @@ export class TrustController {
   @UseGuards(ThrottlerGuard, JwtAuthGuard)
   @Throttle({ trustScore: { limit: 120, ttl: 60 } })
   @ApiOperation({ summary: 'Get computed trust score for current user' })
-  @ApiOkResponse({ description: 'Numeric trust score (0-1000)' })
+  @ApiOkResponse({ description: 'Numeric trust score (0-1000)', type: TrustScoreResponseDto })
   score(@CurrentUser() user: RequestUser) {
-    return this.trustService.getScore(user.userId);
+    return this.trustService.getScore(user.userId).then((trustScore) => ({ trustScore }));
   }
 }

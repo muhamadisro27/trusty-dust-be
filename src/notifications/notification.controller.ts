@@ -1,10 +1,17 @@
 import { Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiNotFoundResponse,
+} from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { NotificationService } from './notification.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { RequestUser } from '../common/interfaces/request-user.interface';
+import { NotificationResponseDto } from './dto/notification-response.dto';
 
 @ApiTags('Notifications')
 @ApiBearerAuth('backend-jwt')
@@ -16,7 +23,7 @@ export class NotificationController {
   @UseGuards(ThrottlerGuard, JwtAuthGuard)
   @Throttle({ notificationsList: { limit: 60, ttl: 60 } })
   @ApiOperation({ summary: 'List stored notifications for user' })
-  @ApiOkResponse({ description: 'List of notifications sorted desc' })
+  @ApiOkResponse({ description: 'List of notifications sorted desc', type: [NotificationResponseDto] })
   list(@CurrentUser() user: RequestUser) {
     return this.notificationService.list(user.userId);
   }
@@ -24,7 +31,8 @@ export class NotificationController {
   @Patch(':id/read')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Mark notification as read' })
-  @ApiOkResponse({ description: 'Updated notification entry' })
+  @ApiOkResponse({ description: 'Updated notification entry', type: NotificationResponseDto })
+  @ApiNotFoundResponse({ description: 'Notification not found' })
   markAsRead(@CurrentUser() user: RequestUser, @Param('id') notificationId: string) {
     return this.notificationService.markAsRead(user.userId, notificationId);
   }

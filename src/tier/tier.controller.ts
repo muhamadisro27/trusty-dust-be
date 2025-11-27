@@ -5,6 +5,7 @@ import { TierService } from './tier.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { RequestUser } from '../common/interfaces/request-user.interface';
+import { TierResponseDto } from './dto/tier-response.dto';
 
 @ApiTags('Tier')
 @ApiBearerAuth('backend-jwt')
@@ -16,7 +17,7 @@ export class TierController {
   @UseGuards(ThrottlerGuard, JwtAuthGuard)
   @Throttle({ tierMe: { limit: 120, ttl: 60 } })
   @ApiOperation({ summary: 'Retrieve tier + history for current user' })
-  @ApiOkResponse({ description: 'Tier name plus historical entries' })
+  @ApiOkResponse({ description: 'Tier name plus historical entries', type: TierResponseDto })
   me(@CurrentUser() user: RequestUser) {
     return this.tierService.getMyTier(user.userId);
   }
