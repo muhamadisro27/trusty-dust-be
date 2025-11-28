@@ -6,6 +6,7 @@ import { TrustService } from '../trust/trust.service';
 import { NotificationService } from '../notifications/notification.service';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { ReactionAction } from './dto/react-post.dto';
+import { PinataService } from '../ipfs/pinata.service';
 
 describe('SocialService', () => {
   const prisma = {
@@ -43,12 +44,16 @@ describe('SocialService', () => {
     mintPost: jest.fn(),
     rewardSocial: jest.fn(),
   } as unknown as BlockchainService;
+  const pinata = {
+    uploadFile: jest.fn(),
+    uploadJson: jest.fn(),
+  } as unknown as PinataService;
 
   let service: SocialService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new SocialService(prisma, dust, trust, notifications, blockchain);
+    service = new SocialService(prisma, dust, trust, notifications, blockchain, pinata);
   });
 
   describe('listPosts', () => {
@@ -132,23 +137,32 @@ describe('SocialService', () => {
   });
 
   describe('createPost', () => {
-    it('creates post and triggers reward/notifications', async () => {
+    it('uploads binary assets, pins metadata, mints, and notifies', async () => {
       const dto = { text: 'gm', mediaUrls: ['https://img'] };
       (prisma.post.create as jest.Mock).mockResolvedValue({ id: 'post-1' });
       (blockchain.mintPost as jest.Mock).mockResolvedValue('0xtx');
+      (pinata.uploadFile as jest.Mock).mockResolvedValue({ cid: 'cid1', uri: 'ipfs://cid1' });
+      (pinata.uploadJson as jest.Mock).mockResolvedValue({ cid: 'meta', uri: 'ipfs://meta' });
 
-      const post = await service.createPost('user-1', dto as any);
+      const files = {
+        images: [{ buffer: Buffer.from('img'), originalname: 'img.png', mimetype: 'image/png' } as any],
+        attachments: undefined,
+      };
 
+      const post = await service.createPost('user-1', dto as any, files);
+
+      expect(pinata.uploadFile).toHaveBeenCalled();
+      expect(pinata.uploadJson).toHaveBeenCalled();
       expect(prisma.post.create).toHaveBeenCalledWith({
         data: {
           authorId: 'user-1',
           text: 'gm',
-          ipfsCid: undefined,
-          media: { create: [{ url: 'https://img' }] },
+          ipfsCid: 'ipfs://meta',
+          media: { create: [{ url: 'https://img' }, { url: 'ipfs://cid1' }] },
         },
         include: { media: true },
       });
-      expect(blockchain.mintPost).toHaveBeenCalledWith('');
+      expect(blockchain.mintPost).toHaveBeenCalledWith('ipfs://meta');
       expect(prisma.post.update).toHaveBeenCalledWith({
         where: { id: 'post-1' },
         data: { onchainMintTx: '0xtx' },
@@ -156,7 +170,7 @@ describe('SocialService', () => {
       expect(dust.rewardUser).toHaveBeenCalledWith('user-1', 3, 'post_created');
       expect(trust.recordEvent).toHaveBeenCalledWith('user-1', 'post_created', 3);
       expect(notifications.notify).toHaveBeenCalledWith('user-1', 'Post published. +3 DUST');
-      expect(post).toEqual({ id: 'post-1', onchainMintTx: '0xtx' });
+      expect(post).toEqual({ id: 'post-1' });
     });
   });
 

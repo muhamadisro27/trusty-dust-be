@@ -1,8 +1,20 @@
-import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
@@ -10,6 +22,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { memoryStorage } from 'multer';
+import type { Express } from 'express';
 import { SocialService } from './social.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -59,10 +73,50 @@ export class SocialController {
   @Post('posts')
   @Throttle({ socialPost: { limit: 20, ttl: 60 } })
   @ApiOperation({ summary: 'Create post and earn DUST reward' })
-  @ApiBody({ type: CreatePostDto })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        text: { type: 'string' },
+        ipfsCid: { type: 'string', nullable: true },
+        mediaUrls: {
+          type: 'array',
+          nullable: true,
+          items: { type: 'string' },
+        },
+        images: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+        attachments: {
+          type: 'array',
+          items: { type: 'string', format: 'binary' },
+        },
+      },
+      required: ['text'],
+    },
+  })
   @ApiCreatedResponse({ description: 'Returns created post with media records', type: PostWithMediaDto })
-  create(@CurrentUser() user: RequestUser, @Body() dto: CreatePostDto) {
-    return this.socialService.createPost(user.userId, dto);
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'images', maxCount: 4 },
+        { name: 'attachments', maxCount: 4 },
+      ],
+      { storage: memoryStorage(), limits: { fileSize: 15 * 1024 * 1024 } },
+    ),
+  )
+  create(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: CreatePostDto,
+    @UploadedFiles()
+    files?: {
+      images?: Express.Multer.File[];
+      attachments?: Express.Multer.File[];
+    },
+  ) {
+    return this.socialService.createPost(user.userId, dto, files);
   }
 
   @Post('posts/:id/react')

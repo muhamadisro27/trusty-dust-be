@@ -4,7 +4,7 @@ import axios from 'axios';
 import FormData from 'form-data';
 import type { Express } from 'express';
 
-interface PinataUploadResult {
+export interface PinataUploadResult {
   cid: string;
   uri: string;
 }
@@ -24,24 +24,46 @@ export class PinataService {
   }
 
   async uploadFile({ file, metadata }: PinataUploadOptions): Promise<PinataUploadResult> {
+    if (!file?.buffer?.length) {
+      throw new BadRequestException('File missing or empty');
+    }
+    return this.uploadBuffer(
+      file.buffer,
+      file.originalname || 'asset.bin',
+      file.mimetype || 'application/octet-stream',
+      metadata,
+    );
+  }
+
+  async uploadJson(payload: unknown, metadata?: Record<string, string>): Promise<PinataUploadResult> {
+    const buffer = Buffer.from(JSON.stringify(payload));
+    return this.uploadBuffer(buffer, 'metadata.json', 'application/json', metadata);
+  }
+
+  private ensureConfigured() {
     if (!this.pinataJwt) {
       this.logger.error('PINATA_JWT missing from configuration');
       throw new BadRequestException('Pinata credentials missing');
     }
-    if (!file?.buffer?.length) {
-      throw new BadRequestException('Company logo file missing or empty');
-    }
+  }
+
+  private async uploadBuffer(
+    buffer: Buffer,
+    filename: string,
+    contentType: string,
+    metadata?: Record<string, string>,
+  ): Promise<PinataUploadResult> {
+    this.ensureConfigured();
 
     const form = new FormData();
-    form.append('file', file.buffer, {
-      filename: file.originalname || 'logo.bin',
-      contentType: file.mimetype || 'application/octet-stream',
+    form.append('file', buffer, {
+      filename,
+      contentType,
     });
-
     form.append(
       'pinataMetadata',
       JSON.stringify({
-        name: metadata?.name ?? file.originalname ?? 'trusty-dust-job-logo',
+        name: metadata?.name ?? filename,
         keyvalues: metadata ?? {},
       }),
     );
@@ -52,6 +74,10 @@ export class PinataService {
       }),
     );
 
+    return this.executeUpload(form);
+  }
+
+  private async executeUpload(form: FormData): Promise<PinataUploadResult> {
     try {
       const response = await axios.post('https://api.pinata.cloud/pinning/pinFileToIPFS', form, {
         headers: {
@@ -67,7 +93,7 @@ export class PinataService {
       return { cid, uri: `ipfs://${cid}` };
     } catch (error) {
       this.logger.error(`Pinata upload failed: ${error instanceof Error ? error.message : error}`);
-      throw new BadRequestException('Failed to upload company logo to IPFS');
+      throw new BadRequestException('Failed to upload asset to IPFS');
     }
   }
 }

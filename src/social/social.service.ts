@@ -10,6 +10,8 @@ import { ReactPostDto, ReactionAction } from './dto/react-post.dto';
 import { BlockchainService } from '../blockchain/blockchain.service';
 import { ListPostsQueryDto } from './dto/list-posts-query.dto';
 import { PostDetailQueryDto } from './dto/post-detail-query.dto';
+import { PinataService, PinataUploadResult } from '../ipfs/pinata.service';
+import type { Express } from 'express';
 
 const DUST_REWARD_BY_ACTION: Record<ReactionAction, number> = {
   [ReactionAction.LIKE]: 1,
@@ -44,6 +46,11 @@ type ReactionGroup = {
   _count: { _all: number };
 };
 
+type UploadBundle = {
+  images?: Express.Multer.File[];
+  attachments?: Express.Multer.File[];
+};
+
 @Injectable()
 export class SocialService {
   private readonly logger = new Logger(SocialService.name);
@@ -54,6 +61,7 @@ export class SocialService {
     private readonly trustService: TrustService,
     private readonly notifications: NotificationService,
     private readonly blockchain: BlockchainService,
+    private readonly pinata: PinataService,
   ) {}
 
   private clamp(value: number | undefined, min: number, max: number, fallback: number) {
@@ -273,21 +281,48 @@ export class SocialService {
     };
   }
 
-  async createPost(userId: string, dto: CreatePostDto) {
+  async createPost(userId: string, dto: CreatePostDto, uploads?: UploadBundle) {
     this.logger.log(`User ${userId} creating post`);
+    const [imageUploads, attachmentUploads] = await Promise.all([
+      this.uploadFiles(uploads?.images, userId, 'post_image'),
+      this.uploadFiles(uploads?.attachments, userId, 'post_attachment'),
+    ]);
+    const uploadedMediaUris = [...imageUploads, ...attachmentUploads].map((asset) => asset.uri);
+
+    let metadataUri = dto.ipfsCid;
+    if (!metadataUri) {
+      const metadataPayload = {
+        text: dto.text,
+        images: imageUploads.map((asset) => asset.uri),
+        attachments: attachmentUploads.map((asset) => asset.uri),
+        mediaUrls: dto.mediaUrls ?? [],
+        createdAt: new Date().toISOString(),
+      };
+      const metadataUpload = await this.pinata.uploadJson(metadataPayload, {
+        creatorId: userId,
+        type: 'post_metadata',
+      });
+      metadataUri = metadataUpload.uri;
+    }
+
+    const mergedMediaUrls = [
+      ...(dto.mediaUrls ?? []),
+      ...uploadedMediaUris,
+    ];
+
     const post = await this.prisma.post.create({
       data: {
         authorId: userId,
         text: dto.text,
-        ipfsCid: dto.ipfsCid,
+        ipfsCid: metadataUri,
         media: {
-          create: dto.mediaUrls?.map((url) => ({ url })) ?? [],
+          create: mergedMediaUrls.map((url) => ({ url })),
         },
       },
       include: { media: true },
     });
 
-    const mintTx = await this.blockchain.mintPost(dto.ipfsCid ?? '');
+    const mintTx = await this.blockchain.mintPost(metadataUri ?? '');
     if (mintTx) {
       await this.prisma.post.update({
         where: { id: post.id },
@@ -363,5 +398,27 @@ export class SocialService {
     await this.notifications.notify(post.authorId, 'Your post received a boost');
     this.logger.log(`User ${userId} boosted post ${postId} with ${dto.amount} DUST`);
     return boost;
+  }
+
+  private async uploadFiles(
+    files: Express.Multer.File[] | undefined,
+    userId: string,
+    type: string,
+  ): Promise<PinataUploadResult[]> {
+    if (!files?.length) {
+      return [];
+    }
+    return Promise.all(
+      files.map((file, index) =>
+        this.pinata.uploadFile({
+          file,
+          metadata: {
+            creatorId: userId,
+            slot: String(index),
+            type,
+          },
+        }),
+      ),
+    );
   }
 }
