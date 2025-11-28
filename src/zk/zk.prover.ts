@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import initNoirWasm, { Noir } from '@noir-lang/noir_wasm';
+import { Noir } from '@noir-lang/noir_js';
 import { BarretenbergBackend } from '@noir-lang/backend_barretenberg';
 import { ZkCompiler } from './zk.compiler';
 import { ZkProofResult, ZkWitnessInput } from './zk.types';
@@ -15,8 +15,7 @@ export class ZkProver {
 
   private async ensureInitialized() {
     if (!this.noir) {
-      await initNoirWasm();
-      this.noir = new Noir(await this.compiler.getAcir());
+      this.noir = new Noir(await this.compiler.getCompiledCircuit());
     }
 
     if (!this.backend) {

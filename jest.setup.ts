@@ -1,4 +1,4 @@
-jest.mock('@noir-lang/noir_wasm', () => {
+jest.mock('@noir-lang/noir_js', () => {
   class MockNoir {
     constructor() {}
     async execute() {
@@ -8,7 +8,6 @@ jest.mock('@noir-lang/noir_wasm', () => {
 
   return {
     __esModule: true,
-    default: () => Promise.resolve(),
     Noir: MockNoir,
   };
 }, { virtual: true });

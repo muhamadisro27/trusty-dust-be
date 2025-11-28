@@ -96,7 +96,6 @@ export class ZkCompiler implements OnModuleInit {
       param_witnesses: {},
       return_type: null,
       return_witnesses: [],
-      error_types: {},
     };
   }
 
