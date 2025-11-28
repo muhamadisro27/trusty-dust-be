@@ -17,7 +17,9 @@ export class DustService {
 
   async rewardUser(userId: string, amount: number, reason: string) {
     const balance = await this.ensureUserBalance(userId);
-    this.logger.log(`Rewarding user ${userId} with ${amount} DUST for ${reason}`);
+    this.logger.log(
+      `Rewarding user ${userId} with ${amount} DUST for ${reason}`,
+    );
     const now = new Date();
     let dailyEarned = balance.dailyEarned;
     let checkpoint = balance.dailyEarnedCheckpoint;
@@ -61,17 +63,21 @@ export class DustService {
     const amountWei = this.toDustWei(amount);
 
     try {
-      const balanceWei = await this.blockchain.getDustBalance(user.walletAddress);
+      const balanceWei = await this.blockchain.getDustBalance(
+        user.walletAddress,
+      );
       if (balanceWei < amountWei) {
-        this.logger.warn(`User ${userId} insufficient on-chain DUST for ${memo}`);
+        this.logger.warn(
+          `User ${userId} insufficient on-chain DUST for ${memo}`,
+        );
         throw new BadRequestException('Insufficient on-chain DUST');
       }
 
-      const burnTx = await this.blockchain.burnDust(user.walletAddress, amount);
-      this.logger.log(
-        `Burned ${amount} DUST from user ${userId} for ${memo} (tx=${burnTx ?? 'n/a'})`,
-      );
-      return { burned: amount, txHash: burnTx };
+      // const burnTx = await this.blockchain.burnDust(user.walletAddress, amount);
+      // this.logger.log(
+      //   `Burned ${amount} DUST from user ${userId} for ${memo} (tx=${burnTx ?? 'n/a'})`,
+      // );
+      // return { burned: amount, txHash: burnTx };
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
@@ -94,7 +100,10 @@ export class DustService {
     const token = await this.prisma.token.upsert({
       where: { symbol: this.dustSymbol },
       update: {},
-      create: { symbol: this.dustSymbol, description: 'Off-chain reputation points' },
+      create: {
+        symbol: this.dustSymbol,
+        description: 'Off-chain reputation points',
+      },
     });
 
     return this.prisma.userTokenBalance.upsert({
@@ -111,7 +120,8 @@ export class DustService {
   }
 
   private toDustWei(amount: number | bigint) {
-    const normalized = typeof amount === 'number' ? BigInt(Math.trunc(amount)) : amount;
+    const normalized =
+      typeof amount === 'number' ? BigInt(Math.trunc(amount)) : amount;
     return normalized * DUST_UNIT;
   }
 }
