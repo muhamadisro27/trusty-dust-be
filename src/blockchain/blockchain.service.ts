@@ -1,8 +1,24 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AbiLoaderService } from './abi-loader.service';
-import { Address, PublicClient, WalletClient, Chain, createPublicClient, createWalletClient, http, type Account } from 'viem';
+import {
+  Address,
+  PublicClient,
+  WalletClient,
+  Chain,
+  createPublicClient,
+  createWalletClient,
+  http,
+  type Account,
+} from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
+
+const DUST_UNIT = 10n ** 18n;
+type SocialAction = 'LIKE' | 'COMMENT' | 'REPOST';
+import { ContentAbi } from '../abis/ContentAbi';
+import { JobsAbi } from '../abis/JobsAbi';
+import { CoreAbi } from '../abis/CoreAbi';
+import { DustTokenAbi } from '../abis/DustTokenAbi';
 
 @Injectable()
 export class BlockchainService {
@@ -12,6 +28,14 @@ export class BlockchainService {
   private walletAccount?: Account;
   private readonly chain: Chain | undefined;
   private readonly rpcUrl: string | undefined;
+  private readonly dustContract?: Address;
+  private readonly identityContract?: Address;
+  private readonly coreContract?: Address;
+  private readonly contentContract?: Address;
+  private readonly jobsContract?: Address;
+  private readonly verifierContract?: Address;
+  private readonly escrowFactoryContract?: Address;
+  private readonly sbtContract?: Address;
 
   constructor(private readonly configService: ConfigService, private readonly abiLoader: AbiLoaderService) {
     this.rpcUrl = this.configService.get<string>('RPC_URL');
@@ -19,10 +43,33 @@ export class BlockchainService {
     if (this.rpcUrl) {
       this.publicClient = createPublicClient({ transport: http(this.rpcUrl) });
     }
+    this.dustContract = this.getAddress('DUST_CONTRACT', 'DUST_TOKEN_ADDRESS');
+    this.identityContract = this.getAddress('IDENTITY_CONTRACT');
+    this.coreContract = this.getAddress('CORE_CONTRACT');
+    this.contentContract = this.getAddress('CONTENT_CONTRACT');
+    this.jobsContract = this.getAddress('JOBS_CONTRACT');
+    this.verifierContract = this.getAddress('VERIFIER_CONTRACT', 'TRUST_VERIFICATION_ADDRESS');
+    this.escrowFactoryContract = this.getAddress('ESCROW_FACTORY_ADDRESS');
+    this.sbtContract = this.getAddress('SBT_CONTRACT_ADDRESS');
+  }
+
+  private getAddress(...keys: string[]): Address | undefined {
+    for (const key of keys) {
+      const value = this.configService.get<string>(key);
+      if (value) {
+        return this.normalizeAddress(value);
+      }
+    }
+    return undefined;
   }
 
   private normalizeAddress(address: string): Address {
     return (address.startsWith('0x') ? address : `0x${address}`) as Address;
+  }
+
+  private toDustWei(amount: number | bigint) {
+    const base = typeof amount === 'number' ? BigInt(amount) : amount;
+    return base * DUST_UNIT;
   }
 
   private getPublicClient() {
@@ -40,9 +87,13 @@ export class BlockchainService {
       return this.walletClient;
     }
     const rpcUrl = this.rpcUrl;
-    const privateKey = this.configService.get<string>('ESCROW_SIGNER_KEY');
+    const privateKey =
+      this.configService.get<string>('PRIVATE_KEY') ??
+      this.configService.get<string>('ESCROW_SIGNER_KEY');
     if (!rpcUrl || !privateKey) {
-      this.logger.warn('Wallet client not fully configured, returning undefined - calls will be simulated');
+      this.logger.warn(
+        'Wallet client not fully configured (RPC_URL or PRIVATE_KEY missing), returning undefined - calls will be simulated',
+      );
       return undefined;
     }
     const account = privateKeyToAccount(privateKey as `0x${string}`);
@@ -56,9 +107,9 @@ export class BlockchainService {
 
   async verifyTrustProof(params: { proof: string; publicInputs: string[]; minScore?: number }) {
     const { proof, publicInputs, minScore } = params;
-    const contractAddress = this.configService.get<string>('TRUST_VERIFICATION_ADDRESS');
+    const contractAddress = this.verifierContract;
     if (!contractAddress) {
-      this.logger.warn('TRUST_VERIFICATION_ADDRESS missing, skipping on-chain verification');
+      this.logger.warn('VERIFIER_CONTRACT missing, skipping on-chain verification');
       return true;
     }
     const abi = this.abiLoader.loadAbi('trust-verification.json');
@@ -78,7 +129,7 @@ export class BlockchainService {
   }
 
   async lockEscrow(jobId: number, poster: string, worker: string, amount: bigint) {
-    const contractAddress = this.configService.get<string>('ESCROW_FACTORY_ADDRESS');
+    const contractAddress = this.escrowFactoryContract;
     if (!contractAddress) {
       this.logger.warn('ESCROW_FACTORY_ADDRESS missing, returning offchain placeholder');
       return `offchain-lock-${jobId}-${Date.now()}`;
@@ -101,7 +152,7 @@ export class BlockchainService {
   }
 
   async releaseEscrow(jobId: number) {
-    const contractAddress = this.configService.get<string>('ESCROW_FACTORY_ADDRESS');
+    const contractAddress = this.escrowFactoryContract;
     if (!contractAddress) {
       this.logger.warn('ESCROW_FACTORY_ADDRESS missing, returning offchain release');
       return `offchain-release-${jobId}-${Date.now()}`;
@@ -124,7 +175,7 @@ export class BlockchainService {
   }
 
   async refundEscrow(jobId: number) {
-    const contractAddress = this.configService.get<string>('ESCROW_FACTORY_ADDRESS');
+    const contractAddress = this.escrowFactoryContract;
     if (!contractAddress) {
       this.logger.warn('ESCROW_FACTORY_ADDRESS missing, returning offchain refund');
       return `offchain-refund-${jobId}-${Date.now()}`;
@@ -147,7 +198,7 @@ export class BlockchainService {
   }
 
   async updateSbtMetadata(tokenId: number, tier: string, action: 'mint' | 'update', owner?: string) {
-    const contractAddress = this.configService.get<string>('SBT_CONTRACT_ADDRESS');
+    const contractAddress = this.sbtContract;
     if (!contractAddress) {
       return `offchain-sbt-${action}-${tokenId}`;
     }
@@ -171,24 +222,178 @@ export class BlockchainService {
     });
   }
 
-  async burnDustBoost(user: string, amount: bigint, postId: number) {
-    const contractAddress = this.configService.get<string>('DUST_TOKEN_ADDRESS');
-    if (!contractAddress) {
-      return `offchain-burn-${postId}-${Date.now()}`;
+  async mintPost(metadataUri?: string) {
+    if (!this.contentContract) {
+      this.logger.warn('CONTENT_CONTRACT missing, skipping mintPost');
+      return null;
     }
     const wallet = this.getWalletClient();
-    if (!wallet) {
-      return `simulated-burn-${postId}-${Date.now()}`;
+    if (!wallet || !this.walletAccount) {
+      this.logger.warn('Wallet client missing, skipping mintPost');
+      return null;
     }
-    const abi = this.abiLoader.loadAbi('dust-token.json');
-    this.logger.log(`writeContract burnDustBoost post ${postId} amount ${amount}`);
+    try {
+      const txHash = await wallet.writeContract({
+        address: this.contentContract,
+        abi: ContentAbi,
+        functionName: 'mintPost',
+        args: [metadataUri ?? ''],
+        chain: this.chain,
+        account: this.walletAccount,
+      });
+      this.logger.log(`mintPost tx=${txHash}`);
+      return txHash as string;
+    } catch (error) {
+      this.logger.error(`Failed to mint post NFT: ${error}`);
+      return null;
+    }
+  }
+
+  async rewardSocial(user: string, action: SocialAction) {
+    if (!this.coreContract) {
+      this.logger.warn('CORE_CONTRACT missing, skipping rewardSocial');
+      return null;
+    }
+    const wallet = this.getWalletClient();
+    if (!wallet || !this.walletAccount) {
+      this.logger.warn('Wallet client missing, skipping rewardSocial');
+      return null;
+    }
+    try {
+      const actionCode = this.mapSocialAction(action);
+      const txHash = await wallet.writeContract({
+        address: this.coreContract,
+        abi: CoreAbi,
+        functionName: 'rewardSocial',
+        args: [this.normalizeAddress(user), actionCode],
+        chain: this.chain,
+        account: this.walletAccount,
+      });
+      this.logger.log(`rewardSocial user=${user} action=${action} tx=${txHash}`);
+      return txHash as string;
+    } catch (error) {
+      this.logger.error(`Failed to reward social action: ${error}`);
+      return null;
+    }
+  }
+
+  async createJobOnChain(minScore: number) {
+    if (!this.jobsContract) {
+      this.logger.warn('JOBS_CONTRACT missing, skipping createJob');
+      return { jobId: null, txHash: null } as const;
+    }
+    const wallet = this.getWalletClient();
+    if (!wallet || !this.walletAccount) {
+      this.logger.warn('Wallet client missing, skipping createJob');
+      return { jobId: null, txHash: null } as const;
+    }
+    try {
+      const client = this.getPublicClient();
+      const nextJobId = (await client.readContract({
+        address: this.jobsContract,
+        abi: JobsAbi,
+        functionName: 'nextJobId',
+      })) as bigint;
+      const txHash = await wallet.writeContract({
+        address: this.jobsContract,
+        abi: JobsAbi,
+        functionName: 'createJob',
+        args: [BigInt(minScore)],
+        chain: this.chain,
+        account: this.walletAccount,
+      });
+      this.logger.log(`createJob id=${nextJobId} tx=${txHash}`);
+      return { jobId: nextJobId, txHash: txHash as string } as const;
+    } catch (error) {
+      this.logger.error(`Failed to create on-chain job: ${error}`);
+      return { jobId: null, txHash: null } as const;
+    }
+  }
+
+  async assignJobWorker(jobId: bigint, worker: string) {
+    if (!this.jobsContract) {
+      this.logger.warn('JOBS_CONTRACT missing, skipping assignWorker');
+      return null;
+    }
+    const wallet = this.getWalletClient();
+    if (!wallet || !this.walletAccount) {
+      this.logger.warn('Wallet client missing, skipping assignWorker');
+      return null;
+    }
+    try {
+      const txHash = await wallet.writeContract({
+        address: this.jobsContract,
+        abi: JobsAbi,
+        functionName: 'assignWorker',
+        args: [jobId, this.normalizeAddress(worker)],
+        chain: this.chain,
+        account: this.walletAccount,
+      });
+      this.logger.log(`assignWorker job=${jobId} worker=${worker} tx=${txHash}`);
+      return txHash as string;
+    } catch (error) {
+      this.logger.error(`Failed to assign worker on-chain: ${error}`);
+      return null;
+    }
+  }
+
+  async approveJob(jobId: bigint, rating: number) {
+    if (!this.jobsContract) {
+      this.logger.warn('JOBS_CONTRACT missing, skipping approveJob');
+      return null;
+    }
+    const wallet = this.getWalletClient();
+    if (!wallet || !this.walletAccount) {
+      this.logger.warn('Wallet client missing, skipping approveJob');
+      return null;
+    }
+    try {
+      const txHash = await wallet.writeContract({
+        address: this.jobsContract,
+        abi: JobsAbi,
+        functionName: 'approveJob',
+        args: [jobId, BigInt(rating)],
+        chain: this.chain,
+        account: this.walletAccount,
+      });
+      this.logger.log(`approveJob job=${jobId} rating=${rating} tx=${txHash}`);
+      return txHash as string;
+    } catch (error) {
+      this.logger.error(`Failed to approve job on-chain: ${error}`);
+      return null;
+    }
+  }
+
+  private mapSocialAction(action: SocialAction) {
+    switch (action) {
+      case 'LIKE':
+        return 0;
+      case 'COMMENT':
+        return 1;
+      case 'REPOST':
+      default:
+        return 2;
+    }
+  }
+
+  async burnDustBoost(user: string, amountDust: bigint | number, postId?: number) {
+    const contractAddress = this.dustContract;
+    if (!contractAddress) {
+      return `offchain-burn-${postId ?? 'n/a'}-${Date.now()}`;
+    }
+    const wallet = this.getWalletClient();
+    if (!wallet || !this.walletAccount) {
+      return `simulated-burn-${postId ?? 'n/a'}-${Date.now()}`;
+    }
+    const amountWei = this.toDustWei(amountDust);
+    this.logger.log(`writeContract burnDust post ${postId ?? 'n/a'} amount ${amountWei}`);
     return wallet.writeContract({
-      address: contractAddress as Address,
-      abi,
-      functionName: 'burnBoost',
-      args: [this.normalizeAddress(user), amount, BigInt(postId)],
+      address: contractAddress,
+      abi: DustTokenAbi,
+      functionName: 'burn',
+      args: [this.normalizeAddress(user), amountWei],
       chain: this.chain,
-      account: this.walletAccount ?? null,
+      account: this.walletAccount,
     });
   }
 }

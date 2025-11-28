@@ -11,6 +11,7 @@ import { TrustService } from '../trust/trust.service';
 import { EscrowService } from '../escrow/escrow.service';
 import { ZkService } from '../zk/zk.service';
 import { NotificationService } from '../notifications/notification.service';
+import { BlockchainService } from '../blockchain/blockchain.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { ApplyJobDto } from './dto/apply-job.dto';
 import { SubmitWorkDto } from './dto/submit-work.dto';
@@ -27,6 +28,7 @@ export class JobsService {
     private readonly escrowService: EscrowService,
     private readonly zkService: ZkService,
     private readonly notificationService: NotificationService,
+    private readonly blockchain: BlockchainService,
   ) {}
 
   async createJob(userId: string, dto: CreateJobDto) {
@@ -47,6 +49,7 @@ export class JobsService {
     if (!creator) {
       throw new NotFoundException('User missing');
     }
+    const onchainJob = await this.blockchain.createJobOnChain(dto.minTrustScore);
 
     const normalizedRequirements =
       dto.requirements
@@ -68,6 +71,8 @@ export class JobsService {
         closeAt: dto.closeAt ? new Date(dto.closeAt) : undefined,
         minTrustScore: dto.minTrustScore,
         reward: dto.reward,
+        onchainJobId: onchainJob.jobId ?? undefined,
+        onchainCreateTx: onchainJob.txHash ?? undefined,
         status: 'OPEN',
       },
     });
@@ -83,7 +88,9 @@ export class JobsService {
       userId,
       'Job created and escrow locked',
     );
-    this.logger.log(`Job ${job.id} created by ${userId}`);
+    this.logger.log(
+      `Job ${job.id} created by ${userId} (on-chain id ${onchainJob.jobId ?? 'n/a'})`,
+    );
     return job;
   }
 
@@ -296,6 +303,23 @@ export class JobsService {
       );
     }
 
+    const worker = await this.prisma.user.findUnique({
+      where: { id: application.workerId },
+      select: { walletAddress: true },
+    });
+    if (!worker?.walletAddress) {
+      throw new NotFoundException('Worker wallet missing');
+    }
+    const rating = dto.rating ?? 5;
+    const onchainJobId = job.onchainJobId ?? BigInt(job.chainRef);
+    let onchainApproveTx: string | null = null;
+    try {
+      await this.blockchain.assignJobWorker(onchainJobId, worker.walletAddress);
+      onchainApproveTx = await this.blockchain.approveJob(onchainJobId, rating);
+    } catch (error) {
+      this.logger.warn(`On-chain job finalize failed for ${job.id}: ${error}`);
+    }
+
     const updatedApplication = await this.prisma.jobApplication.update({
       where: { id: applicationId },
       data: { status: 'CONFIRMED', confirmationTxHash: dto.txHash },
@@ -303,18 +327,14 @@ export class JobsService {
 
     await this.prisma.job.update({
       where: { id: job.id },
-      data: { status: 'COMPLETED' },
+      data: { status: 'COMPLETED', onchainApproveTx: onchainApproveTx ?? undefined },
     });
     await this.escrowService.release(job.id, job.chainRef);
     await this.notificationService.notify(
       application.workerId,
       'Payment released for your job',
     );
-    await this.trustService.recordEvent(
-      application.workerId,
-      'job_completed',
-      100,
-    );
+    await this.trustService.recordEvent(application.workerId, 'job_completed', 100);
     this.logger.log(
       `Application ${applicationId} confirmed by poster ${userId}`,
     );

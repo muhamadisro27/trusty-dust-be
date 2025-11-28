@@ -287,6 +287,15 @@ export class SocialService {
       include: { media: true },
     });
 
+    const mintTx = await this.blockchain.mintPost(dto.ipfsCid ?? '');
+    if (mintTx) {
+      await this.prisma.post.update({
+        where: { id: post.id },
+        data: { onchainMintTx: mintTx },
+      });
+      (post as typeof post & { onchainMintTx?: string | null }).onchainMintTx = mintTx;
+    }
+
     await this.dustService.rewardUser(userId, 3, 'post_created');
     await this.trustService.recordEvent(userId, 'post_created', 3);
     await this.notifications.notify(userId, 'Post published. +3 DUST');
@@ -299,6 +308,13 @@ export class SocialService {
     const post = await this.prisma.post.findUnique({ where: { id: postId } });
     if (!post) {
       throw new NotFoundException('Post not found');
+    }
+    const reactor = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { walletAddress: true },
+    });
+    if (!reactor?.walletAddress) {
+      throw new NotFoundException('User wallet missing');
     }
 
     const reaction = await this.prisma.postReaction.create({
@@ -316,6 +332,7 @@ export class SocialService {
       await this.dustService.rewardUser(userId, reward, `post_${dto.type.toLowerCase()}`);
       await this.trustService.recordEvent(userId, `post_${dto.type.toLowerCase()}`, reward);
     }
+    await this.blockchain.rewardSocial(reactor.walletAddress, dto.type);
 
     await this.notifications.notify(post.authorId, 'New interaction on your post');
     this.logger.debug(`User ${userId} reacted to post ${postId}`);
@@ -342,7 +359,7 @@ export class SocialService {
       },
     });
 
-    await this.blockchain.burnDustBoost(booster.walletAddress, BigInt(dto.amount), boost.sequence);
+    await this.blockchain.burnDustBoost(booster.walletAddress, dto.amount, boost.sequence);
     await this.notifications.notify(post.authorId, 'Your post received a boost');
     this.logger.log(`User ${userId} boosted post ${postId} with ${dto.amount} DUST`);
     return boost;

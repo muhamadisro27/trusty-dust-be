@@ -6,6 +6,7 @@ import { TrustService } from '../trust/trust.service';
 import { EscrowService } from '../escrow/escrow.service';
 import { ZkService } from '../zk/zk.service';
 import { NotificationService } from '../notifications/notification.service';
+import { BlockchainService } from '../blockchain/blockchain.service';
 
 describe('JobsService', () => {
   const prisma = {
@@ -24,12 +25,17 @@ describe('JobsService', () => {
   const escrow = { lock: jest.fn(), release: jest.fn() } as unknown as EscrowService;
   const zk = { assertProof: jest.fn() } as unknown as ZkService;
   const notification = { notify: jest.fn() } as unknown as NotificationService;
+  const blockchain = {
+    createJobOnChain: jest.fn(),
+    assignJobWorker: jest.fn(),
+    approveJob: jest.fn(),
+  } as unknown as BlockchainService;
 
   let service: JobsService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new JobsService(prisma, dust, trust, escrow, zk, notification);
+    service = new JobsService(prisma, dust, trust, escrow, zk, notification, blockchain);
   });
 
   const createJobPayload = () =>
@@ -70,19 +76,25 @@ describe('JobsService', () => {
       ).rejects.toBeInstanceOf(NotFoundException);
     });
 
-    it('asserts proof, spends dust, creates job, locks escrow, notifies', async () => {
+    it('asserts proof, spends dust, syncs on-chain job, locks escrow, notifies', async () => {
       const dto = createJobPayload();
       (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user', walletAddress: '0xabc' });
-      (prisma.job.create as jest.Mock).mockResolvedValue({ id: 'job', chainRef: 5 });
+      (blockchain.createJobOnChain as jest.Mock).mockResolvedValue({ jobId: 12n, txHash: '0xtx' });
+      (prisma.job.create as jest.Mock).mockResolvedValue({ id: 'job', chainRef: 5, onchainJobId: 12n });
 
       const job = await service.createJob('user', dto);
 
       expect(zk.assertProof).toHaveBeenCalledWith('user', 100, undefined);
       expect(dust.spendDust).toHaveBeenCalledWith('user', 50, 'job_create');
-      expect(prisma.job.create).toHaveBeenCalled();
+      expect(blockchain.createJobOnChain).toHaveBeenCalledWith(100);
+      expect(prisma.job.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ onchainJobId: 12n, onchainCreateTx: '0xtx' }),
+        }),
+      );
       expect(escrow.lock).toHaveBeenCalledWith('job', 5, '0xabc', '0xabc', 20);
       expect(notification.notify).toHaveBeenCalledWith('user', 'Job created and escrow locked');
-      expect(job).toEqual({ id: 'job', chainRef: 5 });
+      expect(job).toEqual({ id: 'job', chainRef: 5, onchainJobId: 12n });
     });
   });
 
@@ -225,15 +237,23 @@ describe('JobsService', () => {
       await expect(service.confirm('app', 'poster', {} as any)).rejects.toBeInstanceOf(BadRequestException);
     });
 
-    it('updates application/job, releases escrow, notifies worker, records trust event', async () => {
+    it('updates application/job, syncs chain, releases escrow, notifies worker, records trust event', async () => {
       (prisma.jobApplication.findUnique as jest.Mock).mockResolvedValue({
         id: 'app',
         jobId: 'job',
         workerId: 'worker',
         status: 'SUBMITTED',
       });
-      (prisma.job.findUnique as jest.Mock).mockResolvedValue({ id: 'job', creatorId: 'poster', chainRef: 7 });
+      (prisma.job.findUnique as jest.Mock).mockResolvedValue({
+        id: 'job',
+        creatorId: 'poster',
+        chainRef: 7,
+        onchainJobId: 2n,
+      });
       (prisma.jobApplication.update as jest.Mock).mockResolvedValue({ id: 'app', status: 'CONFIRMED' });
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({ walletAddress: '0xworker' });
+      (blockchain.assignJobWorker as jest.Mock).mockResolvedValue('0xassign');
+      (blockchain.approveJob as jest.Mock).mockResolvedValue('0xapprove');
 
       const result = await service.confirm('app', 'poster', { txHash: '0xtx' } as any);
 
@@ -241,7 +261,12 @@ describe('JobsService', () => {
         where: { id: 'app' },
         data: { status: 'CONFIRMED', confirmationTxHash: '0xtx' },
       });
-      expect(prisma.job.update).toHaveBeenCalledWith({ where: { id: 'job' }, data: { status: 'COMPLETED' } });
+      expect(blockchain.assignJobWorker).toHaveBeenCalledWith(2n, '0xworker');
+      expect(blockchain.approveJob).toHaveBeenCalledWith(2n, 5);
+      expect(prisma.job.update).toHaveBeenCalledWith({
+        where: { id: 'job' },
+        data: { status: 'COMPLETED', onchainApproveTx: '0xapprove' },
+      });
       expect(escrow.release).toHaveBeenCalledWith('job', 7);
       expect(notification.notify).toHaveBeenCalledWith('worker', 'Payment released for your job');
       expect(trust.recordEvent).toHaveBeenCalledWith('worker', 'job_completed', 100);

@@ -13,6 +13,7 @@ describe('SocialService', () => {
       create: jest.fn(),
       findUnique: jest.fn(),
       findMany: jest.fn(),
+      update: jest.fn(),
     },
     postReaction: {
       create: jest.fn(),
@@ -37,7 +38,11 @@ describe('SocialService', () => {
   } as unknown as DustService;
   const trust = { recordEvent: jest.fn() } as unknown as TrustService;
   const notifications = { notify: jest.fn() } as unknown as NotificationService;
-  const blockchain = { burnDustBoost: jest.fn() } as unknown as BlockchainService;
+  const blockchain = {
+    burnDustBoost: jest.fn(),
+    mintPost: jest.fn(),
+    rewardSocial: jest.fn(),
+  } as unknown as BlockchainService;
 
   let service: SocialService;
 
@@ -130,6 +135,7 @@ describe('SocialService', () => {
     it('creates post and triggers reward/notifications', async () => {
       const dto = { text: 'gm', mediaUrls: ['https://img'] };
       (prisma.post.create as jest.Mock).mockResolvedValue({ id: 'post-1' });
+      (blockchain.mintPost as jest.Mock).mockResolvedValue('0xtx');
 
       const post = await service.createPost('user-1', dto as any);
 
@@ -142,10 +148,15 @@ describe('SocialService', () => {
         },
         include: { media: true },
       });
+      expect(blockchain.mintPost).toHaveBeenCalledWith('');
+      expect(prisma.post.update).toHaveBeenCalledWith({
+        where: { id: 'post-1' },
+        data: { onchainMintTx: '0xtx' },
+      });
       expect(dust.rewardUser).toHaveBeenCalledWith('user-1', 3, 'post_created');
       expect(trust.recordEvent).toHaveBeenCalledWith('user-1', 'post_created', 3);
       expect(notifications.notify).toHaveBeenCalledWith('user-1', 'Post published. +3 DUST');
-      expect(post).toEqual({ id: 'post-1' });
+      expect(post).toEqual({ id: 'post-1', onchainMintTx: '0xtx' });
     });
   });
 
@@ -160,6 +171,7 @@ describe('SocialService', () => {
     it('creates reaction, rewards on like/comment/repost, notifies author', async () => {
       (prisma.post.findUnique as jest.Mock).mockResolvedValue({ id: 'post', authorId: 'author' });
       (prisma.postReaction.create as jest.Mock).mockResolvedValue({ id: 'reaction' });
+      (prisma.user.findUnique as jest.Mock).mockResolvedValue({ walletAddress: '0xreactor' });
 
       const result = await service.reactToPost('user', 'post', {
         type: ReactionAction.COMMENT,
@@ -171,6 +183,7 @@ describe('SocialService', () => {
       });
       expect(dust.rewardUser).toHaveBeenCalledWith('user', 3, 'post_comment');
       expect(trust.recordEvent).toHaveBeenCalledWith('user', 'post_comment', 3);
+      expect(blockchain.rewardSocial).toHaveBeenCalledWith('0xreactor', ReactionAction.COMMENT);
       expect(notifications.notify).toHaveBeenCalledWith('author', 'New interaction on your post');
       expect(result).toEqual({ id: 'reaction' });
     });
@@ -212,7 +225,7 @@ describe('SocialService', () => {
           note: 'promo',
         },
       });
-      expect(blockchain.burnDustBoost).toHaveBeenCalledWith('0xabc', BigInt(25), 12);
+      expect(blockchain.burnDustBoost).toHaveBeenCalledWith('0xabc', 25, 12);
       expect(notifications.notify).toHaveBeenCalledWith('author', 'Your post received a boost');
       expect(boost).toEqual({ id: 'boost', sequence: 12 });
     });

@@ -66,6 +66,7 @@ model Post {
   media     PostMedia[]
   reactions PostReaction[]
   boosts    PostBoost[]
+  onchainMintTx String?
 }
 
 model PostMedia {
@@ -163,6 +164,9 @@ model Job {
   closeAt       DateTime?
   minTrustScore Int
   reward        Int
+  onchainJobId      BigInt?   @unique
+  onchainCreateTx   String?
+  onchainApproveTx  String?
   status        JobStatus        @default(OPEN)
   applications  JobApplication[]
   escrow        JobEscrow?
