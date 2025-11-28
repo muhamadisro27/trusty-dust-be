@@ -38,7 +38,7 @@ export class GeminiClientService {
     try {
       const mod = await import('@google/generative-ai');
       const client = new mod.GoogleGenerativeAI(this.apiKey as string);
-      return client.getGenerativeModel({ model: 'gemini-pro' });
+      return client.getGenerativeModel({ model: 'gemini-2.5-flash' });
     } catch (error) {
       this.logger.warn(
         `Gemini SDK unavailable or API key invalid: ${
@@ -54,9 +54,11 @@ export class GeminiClientService {
     if (!model) {
       return null;
     }
+    this.logger.log(`Gemini response: ${prompt}`);
     try {
       const result = await model.generateContent(prompt);
       const text = result.response?.text();
+      this.logger.log(`Gemini response: ${JSON.stringify(text)}`);
       return safeParse<GeminiJsonResponse>(text ?? '');
     } catch (error) {
       this.logger.warn(
