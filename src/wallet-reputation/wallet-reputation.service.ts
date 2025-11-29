@@ -52,7 +52,7 @@ export class WalletReputationService {
         profile = await this.collector.analyzeWallet(address, chainId);
         const profileDuration = Date.now() - profileStartTime;
         this.logger.log(
-          `[ANALYZE_STEP] Step 1/4: Profile collected successfully in ${profileDuration}ms - txCount: ${profile.txCount}, hasNft: ${profile.hasNft}`,
+          `[ANALYZE_STEP] Step 1/4: Profile collected successfully in ${profileDuration}ms - txCount: ${profile.txCount}, nftCount: ${profile.nftCount ?? 0}, dexInteractions: ${profile.dexInteractionCount ?? 0}`,
         );
       } catch (error) {
         this.logger.error(
