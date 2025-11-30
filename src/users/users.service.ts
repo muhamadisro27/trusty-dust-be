@@ -5,12 +5,16 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { PrivyUserPayload } from '../auth/interfaces/privy-user.interface';
 import { SearchPeopleQueryDto } from './dto/search-people.dto';
 import { ProfileFeedQueryDto } from './dto/profile-feed-query.dto';
+import { DustService } from '../dust/dust.service';
 
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly dustService: DustService,
+  ) {}
 
   private clamp(value: number | undefined, min: number, max: number, fallback: number) {
     if (value === undefined || Number.isNaN(value)) {
@@ -19,9 +23,17 @@ export class UsersService {
     return Math.min(Math.max(value, min), max);
   }
 
-  findById(id: string) {
+  async findById(id: string) {
     this.logger.debug(`Fetching user by id ${id}`);
-    return this.prisma.user.findUnique({ where: { id } });
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user) {
+      return null;
+    }
+    const dustBalance = await this.dustService.getBalance(id);
+    return {
+      ...user,
+      dustBalance,
+    };
   }
 
   findByWallet(walletAddress: string) {

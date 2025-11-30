@@ -30,5 +30,8 @@ export class UserResponseDto {
 
   @ApiProperty({ description: 'Update timestamp ISO string' })
   updatedAt: Date;
+
+  @ApiProperty({ description: 'Current DUST token balance (off-chain)' })
+  dustBalance: number;
 }
 
