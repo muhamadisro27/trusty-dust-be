@@ -65,7 +65,28 @@ export class JobsService {
       this.logger.debug(`Company logo uploaded to Pinata with CID ${upload.cid}`);
     }
 
-    const onchainJob = await this.blockchain.createJobOnChain(dto.minTrustScore);
+    // Upload job metadata to IPFS for on-chain storage
+    const jobMetadata = {
+      title: dto.title,
+      description: dto.description,
+      companyName: dto.companyName,
+      companyLogo: companyLogoUri,
+      location: dto.location,
+      jobType: dto.jobType,
+      requirements: dto.requirements ?? [],
+      salaryMin: dto.salaryMin,
+      salaryMax: dto.salaryMax,
+      minTrustScore: dto.minTrustScore,
+      reward: dto.reward,
+      createdAt: new Date().toISOString(),
+    };
+    const metadataUpload = await this.pinataService.uploadJson(jobMetadata, {
+      creatorId: userId,
+      type: 'job_metadata',
+    });
+    const jobCid = metadataUpload.uri;
+
+    const onchainJob = await this.blockchain.createJobOnChain(dto.minTrustScore, jobCid);
 
     const normalizedRequirements =
       dto.requirements

@@ -7,6 +7,7 @@ import { EscrowService } from '../escrow/escrow.service';
 import { ZkService } from '../zk/zk.service';
 import { NotificationService } from '../notifications/notification.service';
 import { BlockchainService } from '../blockchain/blockchain.service';
+import { PinataService } from '../ipfs/pinata.service';
 
 describe('JobsService', () => {
   const prisma = {
@@ -30,12 +31,16 @@ describe('JobsService', () => {
     assignJobWorker: jest.fn(),
     approveJob: jest.fn(),
   } as unknown as BlockchainService;
+  const pinata = {
+    uploadJson: jest.fn(),
+    uploadFile: jest.fn(),
+  } as unknown as PinataService;
 
   let service: JobsService;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new JobsService(prisma, dust, trust, escrow, zk, notification, blockchain);
+    service = new JobsService(prisma, dust, trust, escrow, zk, notification, blockchain, pinata);
   });
 
   const createJobPayload = () =>
@@ -79,6 +84,7 @@ describe('JobsService', () => {
     it('asserts proof, spends dust, syncs on-chain job, locks escrow, notifies', async () => {
       const dto = createJobPayload();
       (prisma.user.findUnique as jest.Mock).mockResolvedValue({ id: 'user', walletAddress: '0xabc' });
+      (pinata.uploadJson as jest.Mock).mockResolvedValue({ cid: 'QmTest', uri: 'ipfs://QmTest' });
       (blockchain.createJobOnChain as jest.Mock).mockResolvedValue({ jobId: 12n, txHash: '0xtx' });
       (prisma.job.create as jest.Mock).mockResolvedValue({ id: 'job', chainRef: 5, onchainJobId: 12n });
 
@@ -86,7 +92,8 @@ describe('JobsService', () => {
 
       expect(zk.assertProof).toHaveBeenCalledWith('user', 100, undefined);
       expect(dust.spendDust).toHaveBeenCalledWith('user', 50, 'job_create');
-      expect(blockchain.createJobOnChain).toHaveBeenCalledWith(100);
+      expect(pinata.uploadJson).toHaveBeenCalled();
+      expect(blockchain.createJobOnChain).toHaveBeenCalledWith(100, 'ipfs://QmTest');
       expect(prisma.job.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({ onchainJobId: 12n, onchainCreateTx: '0xtx' }),

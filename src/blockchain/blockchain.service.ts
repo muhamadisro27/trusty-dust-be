@@ -277,7 +277,7 @@ export class BlockchainService {
     }
   }
 
-  async createJobOnChain(minScore: number) {
+  async createJobOnChain(minScore: number, cid: string) {
     if (!this.jobsContract) {
       this.logger.warn('JOBS_CONTRACT missing, skipping createJob');
       return { jobId: null, txHash: null } as const;
@@ -298,7 +298,7 @@ export class BlockchainService {
         address: this.jobsContract,
         abi: JobsAbi,
         functionName: 'createJob',
-        args: [BigInt(minScore)],
+        args: [BigInt(minScore), cid],
         chain: this.chain,
         account: this.walletAccount,
       });
